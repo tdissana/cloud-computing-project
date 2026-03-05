@@ -1,4 +1,4 @@
-package lk.watupa.stats_service;
+package lk.watupa.stats;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class StatsServiceApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(StatsServiceApplication.class, args);
     }
 
