@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:techsalary;DB_CLOSE_DELAY=-1;NON_KEYWORDS=VALUE;INIT=CREATE SCHEMA IF NOT EXISTS salary
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: none          # let schema-local.sql create the table, not Hibernate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        default_schema: salary
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-local.sql
+      data-locations: classpath:data-local.sql

@@ -1,0 +1,47 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: search-service
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres-service.data.svc.cluster.local:5432/techsalary}
+    username: ${DB_USER:techsalary}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: none          # search-service NEVER modifies the schema
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: salary
+
+  # Disable Spring Security's default user (we manage security ourselves)
+  security:
+    user:
+      name: disabled
+      password: disabled
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true   # enables /actuator/health/liveness and /actuator/health/readiness
+      show-details: always
+
+logging:
+  level:
+    lk.watupa.searchservice: INFO
+    org.springframework.security: WARN

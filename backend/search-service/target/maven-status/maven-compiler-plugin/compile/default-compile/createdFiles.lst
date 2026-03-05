@@ -1,0 +1,16 @@
+lk/watupa/search_service/dto/PagedResponse.class
+lk/watupa/search_service/service/SearchService.class
+lk/watupa/search_service/dto/SalaryResultDto$SalaryResultDtoBuilder.class
+lk/watupa/search_service/dto/PagedResponse$PagedResponseBuilder.class
+lk/watupa/search_service/dto/SalaryResultDto.class
+lk/watupa/search_service/dto/FilterOptionsDto$FilterOptionsDtoBuilder.class
+lk/watupa/search_service/model/ApprovedSalary.class
+lk/watupa/search_service/model/ApprovedSalary$ApprovedSalaryBuilder.class
+lk/watupa/search_service/repository/SalarySearchRepository.class
+lk/watupa/search_service/config/SecurityConfig.class
+lk/watupa/search_service/dto/SalarySearchRequest.class
+lk/watupa/search_service/dto/FilterOptionsDto.class
+lk/watupa/search_service/repository/SalarySpecification.class
+lk/watupa/search_service/controller/SearchController.class
+lk/watupa/search_service/exception/GlobalExceptionHandler.class
+lk/watupa/search_service/SearchServiceApplication.class
