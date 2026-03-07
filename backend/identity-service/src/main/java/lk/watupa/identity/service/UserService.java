@@ -2,14 +2,14 @@ package lk.watupa.identity.service;
 
 import lk.watupa.identity.model.User;
 import lk.watupa.identity.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public boolean isUsernameExist(String username) {
         return userRepository.existsByUserName(username);
