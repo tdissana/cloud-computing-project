@@ -1,4 +1,4 @@
-package lk.watupa.salary_submission_service.config;
+package lk.watupa.salary_submission.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

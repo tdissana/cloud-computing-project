@@ -1,4 +1,4 @@
-package lk.watupa.salary_submission_service.config;
+package lk.watupa.salary_submission.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,8 +29,9 @@ public class SecurityConfig {
 
                 // Public endpoints
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/submissions").permitAll()       // allow POST submissions
+                        .requestMatchers("/api/submissions/**").permitAll()       // allow POST submissions
                         .requestMatchers("/h2-console/**").permitAll()        // allow H2 console
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()                          // everything else requires auth
                 )
 

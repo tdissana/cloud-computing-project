@@ -1,4 +1,4 @@
-package lk.watupa.salary_submission_service.enums;
+package lk.watupa.salary_submission.enums;
     public enum Status
     {
     PENDING,

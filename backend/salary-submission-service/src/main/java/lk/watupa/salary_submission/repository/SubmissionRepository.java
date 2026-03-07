@@ -1,8 +1,8 @@
-package lk.watupa.salary_submission_service.repository;
+package lk.watupa.salary_submission.repository;
 
-import lk.watupa.salary_submission_service.enums.ExperienceLevel;
-import lk.watupa.salary_submission_service.enums.Status;
-import lk.watupa.salary_submission_service.model.Submission;
+import lk.watupa.salary_submission.enums.ExperienceLevel;
+import lk.watupa.salary_submission.enums.Status;
+import lk.watupa.salary_submission.model.Submission;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

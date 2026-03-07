@@ -1,4 +1,4 @@
-package lk.watupa.salary_submission_service;
+package lk.watupa.salary_submission;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

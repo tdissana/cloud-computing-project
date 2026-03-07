@@ -1,10 +1,10 @@
-package lk.watupa.salary_submission_service.payload;
+package lk.watupa.salary_submission.payload;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lk.watupa.salary_submission_service.enums.ExperienceLevel;
+import lk.watupa.salary_submission.enums.ExperienceLevel;
 import lombok.Data;
 
 @Data
@@ -26,10 +26,10 @@ public class SubmissionRequest {
 
     @NotNull(message = "Base salary is required")
     @Positive(message = "Base salary must be positive")
-    private Integer baseSalary;
+    private Double baseSalary;
 
     @Positive(message = "Total compensation must be positive")
-    private Integer totalCompensation;
+    private Double totalCompensation;
 
     @Size(max = 10)
     private String currency = "LKR";

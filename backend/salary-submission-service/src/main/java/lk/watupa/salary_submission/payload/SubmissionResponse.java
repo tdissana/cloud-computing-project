@@ -1,6 +1,6 @@
-package lk.watupa.salary_submission_service.payload;
+package lk.watupa.salary_submission.payload;
 
-import lk.watupa.salary_submission_service.model.Submission;
+import lk.watupa.salary_submission.model.Submission;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,8 +15,8 @@ public class SubmissionResponse {
     private String role;
     private String experienceLevel;
     private String country;
-    private Integer baseSalary;
-    private Integer totalCompensation;
+    private double baseSalary;
+    private double totalCompensation;
     private String  currency;
     private boolean anonymize;
     private String  status;
