@@ -30,61 +30,6 @@ public class SearchController {
     private final SearchService searchService;
 
     /**
-     * GET /api/search/salaries
-     * 
-     * Legacy GET endpoint. Filter parameters (all optional) can be passed as query parameters.
-     * For complex searches with many filters, prefer using POST endpoint.
-     *
-     * Filter parameters (all optional):
-     *   country, company, jobTitle, seniorityLevel, employmentType,
-     *   currency, minExperience, maxExperience,
-     *   page (0-based), size (default 20, max 100),
-     *   sortBy (grossMonthlySalary | yearsOfExperience | approvedAt | upvotes),
-     *   sortDir (asc | desc)
-     *
-     * Returns a paginated list of approved, anonymized-safe salary entries.
-     */
-    @GetMapping("/salaries")
-    @Operation(summary = "Search salaries (GET - legacy)", description = "Query salaries using URL query parameters. For complex filters, use POST endpoint instead.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successful search", content = @Content(schema = @Schema(implementation = PagedResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid query parameters", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<PagedResponse<SalaryResultResponse>> searchSalaries(
-            @RequestParam(required = false) String country,
-            @RequestParam(required = false) String company,
-            @RequestParam(required = false) String jobTitle,
-            @RequestParam(required = false) String seniorityLevel,
-            @RequestParam(required = false) String employmentType,
-            @RequestParam(required = false) String currency,
-            @RequestParam(required = false) Integer minExperience,
-            @RequestParam(required = false) Integer maxExperience,
-            @RequestParam(required = false, defaultValue = "0") Integer page,
-            @RequestParam(required = false, defaultValue = "20") Integer size,
-            @RequestParam(required = false, defaultValue = "approvedAt") String sortBy,
-            @RequestParam(required = false, defaultValue = "desc") String sortDir
-    ) {
-        SalarySearchRequest request = new SalarySearchRequest();
-        request.setCountry(country);
-        request.setCompany(company);
-        request.setJobTitle(jobTitle);
-        request.setSeniorityLevel(seniorityLevel);
-        request.setEmploymentType(employmentType);
-        request.setCurrency(currency);
-        request.setMinExperience(minExperience);
-        request.setMaxExperience(maxExperience);
-        request.setPage(page);
-        request.setSize(size);
-        request.setSortBy(sortBy);
-        request.setSortDir(sortDir);
-
-        log.info("Salary search request (GET): country={}, company={}, jobTitle={}, level={}, type={}, currency={}, page={}, size={}",
-                country, company, jobTitle, seniorityLevel, employmentType, currency, page, size);
-
-        return ResponseEntity.ok(searchService.search(request));
-    }
-
-    /**
      * POST /api/search/salaries
      * 
      * Preferred POST endpoint. Request body contains structured search criteria.
