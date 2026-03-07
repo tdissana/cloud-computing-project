@@ -9,7 +9,9 @@ import lombok.*;
 @Entity
 @Data
 @NoArgsConstructor
-@Table(name = "users",
+@Table(
+        schema = "identity",
+        name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "username"),
                 @UniqueConstraint(columnNames = "email")
