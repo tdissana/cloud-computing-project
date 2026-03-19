@@ -25,7 +25,7 @@
     <modules>
         <!--        <module>bff-service</module>-->
         <module>identity-service</module>
-        <!--        <module>salary-submission-service</module>-->
+        <module>salary-submission-service</module>
         <module>search-service</module>
         <!--        <module>stats-service</module>-->
         <!--        <module>vote-service</module>-->
