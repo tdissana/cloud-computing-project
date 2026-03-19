@@ -40,7 +40,7 @@ class AuthControllerTest {
 
         SignupResponse response = new SignupResponse("User registered successfully");
 
-        when(authService.signUp(
+        when(authService.signup(
                 request.getUsername(),
                 request.getEmail(),
                 request.getPassword()))
