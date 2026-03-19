@@ -1,5 +1,8 @@
 package lk.watupa.identity.controller;
 
+import jakarta.validation.Valid;
+import lk.watupa.identity.payload.LoginRequest;
+import lk.watupa.identity.payload.LoginResponse;
 import lk.watupa.identity.payload.SignupRequest;
 import lk.watupa.identity.payload.SignupResponse;
 import lk.watupa.identity.service.AuthService;
@@ -19,11 +22,19 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
-        SignupResponse signupResponse = authService.signUp(
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest signupRequest) {
+        SignupResponse signupResponse = authService.signup(
                 signupRequest.getUsername(),
                 signupRequest.getEmail(),
                 signupRequest.getPassword());
         return new ResponseEntity<>(signupResponse, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
+        LoginResponse loginResponse = authService.login(
+                loginRequest.getUsername(),
+                loginRequest.getPassword());
+        return new ResponseEntity<>(loginResponse, HttpStatus.OK);
     }
 }
