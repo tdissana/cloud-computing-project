@@ -21,7 +21,16 @@ public class StatsService {
         );
 
         if (submissions.isEmpty()) {
-            throw new RuntimeException("No approved salary data found for the given filters.");
+            return SalaryStatsResponse.builder()
+                    .role(role)
+                    .company(company)
+                    .level(level)
+                    .country(country)
+                    .count(0)
+                    .average(0.0)
+                    .median(0.0)
+                    .p90(0.0)
+                    .build();
         }
 
         List<Double> salaries = submissions.stream()
