@@ -15,7 +15,7 @@ export async function searchSalaries(
   filters: SalarySearchFilters
 ): Promise<APIResponse<PagedResponse<SalaryResultResponse>>> {
   // Build request body with only non-empty filters
-  const body: any = {};
+  const body: Record<string, unknown> = {};
 
   if (filters.country) body.country = filters.country;
   if (filters.company) body.company = filters.company;

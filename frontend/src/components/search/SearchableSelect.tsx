@@ -25,15 +25,10 @@ export function SearchableSelect({
   // Update filtered options as user types
   useEffect(() => {
     const searchTerm = inputValue.toLowerCase();
-    if (searchTerm.trim() === "") {
-      setFilteredOptions(options);
-    } else {
-      setFilteredOptions(
-        options.filter((opt) =>
-          opt.toLowerCase().includes(searchTerm)
-        )
-      );
-    }
+    const filtered = searchTerm.trim() === "" 
+      ? options 
+      : options.filter((opt) => opt.toLowerCase().includes(searchTerm));
+    setFilteredOptions(filtered);
   }, [inputValue, options]);
 
   // Close dropdown when clicking outside
@@ -117,7 +112,7 @@ export function SearchableSelect({
       {isOpen && inputValue && filteredOptions.length === 0 && (
         <Card className="absolute z-50 w-full mt-1 bg-[#0f1524] border-white/[0.08] backdrop-blur-xl">
           <div className="px-3 py-3 text-sm text-[#4a5572] text-center">
-            No matches found. Press Enter to use "{inputValue}"
+            No matches found. Press Enter to use &quot;{inputValue}&quot;
           </div>
         </Card>
       )}

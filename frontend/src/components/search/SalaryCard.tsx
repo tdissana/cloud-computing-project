@@ -2,7 +2,7 @@ import { SalaryResultResponse } from "@/types/search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatSalary, formatDateTime } from "@/lib/search/helpers";
-import { TrendingUp, MapPin, Briefcase, Code, Lock } from "lucide-react";
+import { TrendingUp, MapPin, Code, Lock } from "lucide-react";
 
 interface SalaryCardProps {
   salary: SalaryResultResponse;

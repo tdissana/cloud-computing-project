@@ -34,7 +34,7 @@ export function getActiveFilters(filters: SalarySearchFilters) {
 /**
  * Convert filter display value to readable label
  */
-export function getFilterLabel(key: keyof SalarySearchFilters, value: any) {
+export function getFilterLabel(key: keyof SalarySearchFilters, value: string | number | undefined) {
   if (typeof value === "number") return value.toString();
   return String(value);
 }
