@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { X } from "lucide-react";
@@ -18,17 +18,15 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [filteredOptions, setFilteredOptions] = useState<string[]>(options);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update filtered options as user types
-  useEffect(() => {
+  // Compute filtered options as a derived value (no setState in effect)
+  const filteredOptions = useMemo(() => {
     const searchTerm = inputValue.toLowerCase();
-    const filtered = searchTerm.trim() === "" 
+    return searchTerm.trim() === "" 
       ? options 
       : options.filter((opt) => opt.toLowerCase().includes(searchTerm));
-    setFilteredOptions(filtered);
   }, [inputValue, options]);
 
   // Close dropdown when clicking outside
