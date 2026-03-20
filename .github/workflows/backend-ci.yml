@@ -7,7 +7,7 @@ on:
       - "services/**"
       - ".github/workflows/backend-ci.yml"
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "development" ]
 
 jobs:
   build:
