@@ -23,7 +23,7 @@
 
     <!-- All microservices -->
     <modules>
-        <!--        <module>bff-service</module>-->
+        <module>bff-service</module>
         <module>identity-service</module>
         <module>salary-submission-service</module>
         <module>search-service</module>
