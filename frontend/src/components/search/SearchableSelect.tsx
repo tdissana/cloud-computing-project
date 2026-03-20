@@ -14,7 +14,7 @@ export function SearchableSelect({
   value,
   onChange,
   options,
-  placeholder = "Search or type...",
+  placeholder = "Search or type....",
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
