@@ -83,13 +83,13 @@ export default function SearchPage() {
     setLoading(true);
     setError(null);
 
-    // Merge draft with pagination/sorting
+    // Merge draft with pagination/sorting, ensuring no null values
     const searchFilters: SalarySearchFilters = {
       ...draft,
       page: 0,
       size: DEFAULT_PAGE_SIZE,
-      sortBy: draft.sortBy ?? "approvedAt",
-      sortDir: draft.sortDir ?? "desc",
+      sortBy: (draft.sortBy || "approvedAt") as string,
+      sortDir: (draft.sortDir || "desc") as string,
     };
 
     setFilters(searchFilters);
@@ -114,6 +114,8 @@ export default function SearchPage() {
       const searchFilters: SalarySearchFilters = {
         ...filters,
         page: newPage,
+        sortBy: (filters.sortBy || "approvedAt") as string,
+        sortDir: (filters.sortDir || "desc") as string,
       };
 
       setFilters(searchFilters);
@@ -139,6 +141,34 @@ export default function SearchPage() {
         ...filters,
         page: 0,
         size: newSize,
+        sortBy: (filters.sortBy || "approvedAt") as string,
+        sortDir: (filters.sortDir || "desc") as string,
+      };
+
+      setFilters(searchFilters);
+
+      const result = await searchSalaries(searchFilters);
+
+      if (result.success && result.data) {
+        setResults(result.data);
+      } else {
+        setError(result.error ?? "Failed to fetch search results.");
+      }
+      setLoading(false);
+    },
+    [filters]
+  );
+
+  const handleSortChange = useCallback(
+    async (newSortBy: string) => {
+      setLoading(true);
+      setError(null);
+
+      const searchFilters: SalarySearchFilters = {
+        ...filters,
+        page: 0,
+        sortBy: newSortBy || "approvedAt",
+        sortDir: (filters.sortDir || "desc") as string,
       };
 
       setFilters(searchFilters);
@@ -276,10 +306,10 @@ export default function SearchPage() {
                   {!loadingOptions && filterOptions ? (
                     <SearchableSelect
                       value={draft.jobTitle ?? ""}
-                      onChange={(value) =>
+                      onChange={(value: string | null) =>
                         setDraft((p) => ({
                           ...p,
-                          jobTitle: value || undefined,
+                          jobTitle: (value || undefined) as string | undefined,
                         }))
                       }
                       options={filterOptions.jobTitles || []}
@@ -298,8 +328,8 @@ export default function SearchPage() {
                   {!loadingOptions && filterOptions ? (
                     <Select
                       value={draft.company ?? ""}
-                      onValueChange={(v) =>
-                        setDraft((p) => ({ ...p, company: v || undefined }))
+                      onValueChange={(v: string | null) =>
+                        setDraft((p) => ({ ...p, company: (v || undefined) as string | undefined }))
                       }
                     >
                       <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
@@ -330,8 +360,8 @@ export default function SearchPage() {
                   </label>
                   <Select
                     value={draft.country ?? ""}
-                    onValueChange={(v) =>
-                      setDraft((p) => ({ ...p, country: v || undefined }))
+                    onValueChange={(v: string | null) =>
+                      setDraft((p) => ({ ...p, country: (v || undefined) as string | undefined }))
                     }
                   >
                     <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
@@ -361,10 +391,10 @@ export default function SearchPage() {
                   </label>
                   <Select
                     value={draft.seniorityLevel ?? ""}
-                    onValueChange={(v) =>
+                    onValueChange={(v: string | null) =>
                       setDraft((p) => ({
                         ...p,
-                        seniorityLevel: v || undefined,
+                        seniorityLevel: (v || undefined) as string | undefined,
                       }))
                     }
                   >
@@ -395,10 +425,10 @@ export default function SearchPage() {
                   </label>
                   <Select
                     value={draft.employmentType ?? ""}
-                    onValueChange={(v) =>
+                    onValueChange={(v: string | null) =>
                       setDraft((p) => ({
                         ...p,
-                        employmentType: v || undefined,
+                        employmentType: (v || undefined) as string | undefined,
                       }))
                     }
                   >
@@ -429,8 +459,8 @@ export default function SearchPage() {
                   </label>
                   <Select
                     value={draft.currency ?? ""}
-                    onValueChange={(v) =>
-                      setDraft((p) => ({ ...p, currency: v || undefined }))
+                    onValueChange={(v: string | null) =>
+                      setDraft((p) => ({ ...p, currency: (v || undefined) as string | undefined }))
                     }
                   >
                     <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
@@ -543,9 +573,9 @@ export default function SearchPage() {
 
                   {/* Sort By */}
                   <Select
-                    value={filters.sortBy ?? "approvedAt"}
-                    onValueChange={(v) => {
-                      setDraft((p) => ({ ...p, sortBy: v }));
+                    value={filters.sortBy || "approvedAt"}
+                    onValueChange={(v: string | null) => {
+                      handleSortChange(v || "approvedAt");
                     }}
                   >
                     <SelectTrigger className="w-auto bg-white/[0.025] border-white/[0.07] text-[#e8edf5] text-sm">
@@ -581,8 +611,8 @@ export default function SearchPage() {
                       <span className="text-sm text-[#4a5572]">Items per page:</span>
                       <Select
                         value={String(filters.size ?? DEFAULT_PAGE_SIZE)}
-                        onValueChange={(v) =>
-                          handlePageSizeChange(parseInt(v, 10))
+                        onValueChange={(v: string | null) =>
+                          handlePageSizeChange(parseInt(v || "20", 10))
                         }
                       >
                         <SelectTrigger className="w-auto bg-white/[0.025] border-white/[0.07] text-[#e8edf5] text-sm">
