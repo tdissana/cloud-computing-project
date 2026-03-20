@@ -7,11 +7,12 @@ import lk.watupa.vote.payload.VoteSummaryResponse;
 import lk.watupa.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,27 +25,26 @@ public class VoteService {
     @Value("${vote.approval.threshold:5}")
     private int approvalThreshold;
 
+    @Transactional
     public VoteResponse castVote(Long submissionId, Long userId, VoteType voteType) {
         log.info("User {} casting {} on submission {}", userId, voteType, submissionId);
 
-        Optional<Vote> existing = voteRepository.findBySubmissionIdAndUserId(submissionId, userId);
-
-        Vote vote;
-        if (existing.isPresent()) {
-            vote = existing.get();
-            log.info("Updating existing vote id {} from {} to {}", vote.getId(), vote.getVoteType(), voteType);
-            vote.setVoteType(voteType);
-        } else {
-            vote = new Vote(submissionId, userId, voteType);
+        int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+        if (updatedRows == 0) {
+            try {
+                voteRepository.saveAndFlush(new Vote(submissionId, userId, voteType));
+            } catch (DataIntegrityViolationException e) {
+                log.warn("Concurrent vote insert detected for submissionId={}, userId={}. Retrying as update.",
+                        submissionId, userId, e);
+                int retryUpdatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+                if (retryUpdatedRows == 0) {
+                    throw new RuntimeException("Unable to persist vote due to a concurrent update", e);
+                }
+            }
         }
 
-        try {
-            vote = voteRepository.save(vote);
-        } catch (Exception e) {
-            log.error("Error saving vote: {}", e.getMessage());
-            throw new RuntimeException("Error saving vote!");
-        }
-
+        Vote vote = voteRepository.findBySubmissionIdAndUserId(submissionId, userId)
+                .orElseThrow(() -> new RuntimeException("Unable to load saved vote"));
         return mapToVoteResponse(vote);
     }
 
@@ -58,10 +58,8 @@ public class VoteService {
 
     public VoteSummaryResponse calculateVoteScore(Long submissionId) {
         log.info("Calculating vote score for submission {}", submissionId);
-        List<Vote> votes = voteRepository.findBySubmissionId(submissionId);
-
-        long upvotes = votes.stream().filter(v -> v.getVoteType() == VoteType.UPVOTE).count();
-        long downvotes = votes.stream().filter(v -> v.getVoteType() == VoteType.DOWNVOTE).count();
+        long upvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.UPVOTE);
+        long downvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.DOWNVOTE);
         long netScore = upvotes - downvotes;
         boolean approved = netScore >= approvalThreshold;
 

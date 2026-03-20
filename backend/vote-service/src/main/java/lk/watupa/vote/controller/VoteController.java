@@ -7,8 +7,10 @@ import lk.watupa.vote.payload.VoteSummaryResponse;
 import lk.watupa.vote.service.VoteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,10 +23,18 @@ public class VoteController {
 
     private final VoteService voteService;
 
+    @Value("${vote.trusted-caller.token}")
+    private String trustedCallerToken;
+
     @PostMapping
     public ResponseEntity<VoteResponse> castVote(
+            @RequestHeader("X-Internal-Token") String internalToken,
             @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody VoteRequest voteRequest) {
+
+        if (!trustedCallerToken.equals(internalToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Untrusted caller");
+        }
 
         log.info("Received vote request from userId={} for submissionId={}",
                 userId, voteRequest.getSubmissionId());

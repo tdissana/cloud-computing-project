@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.stream.Collectors;
 
@@ -25,6 +26,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         APIResponse apiResponse = new APIResponse(message, false);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<APIResponse> handleResponseStatusException(ResponseStatusException e) {
+        APIResponse apiResponse = new APIResponse(e.getReason(), false);
+        return new ResponseEntity<>(apiResponse, e.getStatusCode());
     }
 
     @ExceptionHandler(RuntimeException.class)
