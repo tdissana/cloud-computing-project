@@ -3,6 +3,7 @@ package lk.watupa.identity.service;
 import lk.watupa.identity.model.User;
 import lk.watupa.identity.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,5 +27,10 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Error in saving user!");
         }
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
     }
 }
