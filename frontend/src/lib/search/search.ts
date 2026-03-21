@@ -6,7 +6,24 @@ import {
   FilterOptionsResponse,
 } from "@/types/search";
 
-const BFF_BASE = process.env.NEXT_PUBLIC_BFF_URL ?? "";
+function resolveBffBase(): string {
+  const rawBase = process.env.NEXT_PUBLIC_BFF_URL?.trim();
+  if (!rawBase) return "/bff";
+  if (rawBase.endsWith("/bff")) return rawBase;
+  return `${rawBase}/bff`;
+}
+
+const BFF_BASE = resolveBffBase();
+
+function getErrorMessage(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === "object" && "error" in payload) {
+    const message = (payload as { error?: unknown }).error;
+    if (typeof message === "string" && message.trim().length > 0) {
+      return message;
+    }
+  }
+  return fallback;
+}
 
 /**
  * Search salaries using POST endpoint with structured request body
@@ -43,15 +60,18 @@ export async function searchSalaries(
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `Server error: ${res.status}`
-      );
+    const payload: APIResponse<PagedResponse<SalaryResultResponse>> = await res
+      .json()
+      .catch(() => ({ success: false, error: `Server error: ${res.status}` }));
+
+    if (!res.ok || !payload.success) {
+      return {
+        success: false,
+        error: getErrorMessage(payload, `Server error: ${res.status}`),
+      };
     }
 
-    const data: PagedResponse<SalaryResultResponse> = await res.json();
-    return { success: true, data };
+    return { success: true, data: payload.data };
   } catch (error) {
     return {
       success: false,
@@ -68,9 +88,18 @@ export async function fetchFilterOptions(): Promise<
 > {
   try {
     const res = await fetch(`${BFF_BASE}/api/search/filters`);
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    const data: FilterOptionsResponse = await res.json();
-    return { success: true, data };
+    const payload: APIResponse<FilterOptionsResponse> = await res
+      .json()
+      .catch(() => ({ success: false, error: `Server error: ${res.status}` }));
+
+    if (!res.ok || !payload.success) {
+      return {
+        success: false,
+        error: getErrorMessage(payload, `Server error: ${res.status}`),
+      };
+    }
+
+    return { success: true, data: payload.data };
   } catch (error) {
     return {
       success: false,
