@@ -1,0 +1,80 @@
+import { APIResponse } from "@/types/identity";
+import {
+  SalarySearchFilters,
+  PagedResponse,
+  SalaryResultResponse,
+  FilterOptionsResponse,
+} from "@/types/search";
+
+const BFF_BASE = process.env.NEXT_PUBLIC_BFF_URL ?? "";
+
+/**
+ * Search salaries using POST endpoint with structured request body
+ */
+export async function searchSalaries(
+  filters: SalarySearchFilters
+): Promise<APIResponse<PagedResponse<SalaryResultResponse>>> {
+  // Build request body with only non-empty filters
+  const body: Record<string, unknown> = {};
+
+  if (filters.country) body.country = filters.country;
+  if (filters.company) body.company = filters.company;
+  if (filters.jobTitle) body.jobTitle = filters.jobTitle;
+  if (filters.seniorityLevel) body.seniorityLevel = filters.seniorityLevel;
+  if (filters.employmentType) body.employmentType = filters.employmentType;
+  if (filters.currency) body.currency = filters.currency;
+  if (filters.minExperience !== undefined) body.minExperience = filters.minExperience;
+  if (filters.maxExperience !== undefined) body.maxExperience = filters.maxExperience;
+
+  // Pagination
+  body.page = filters.page ?? 0;
+  body.size = filters.size ?? 20;
+
+  // Sorting
+  body.sortBy = filters.sortBy ?? "approvedAt";
+  body.sortDir = filters.sortDir ?? "desc";
+
+  try {
+    const res = await fetch(`${BFF_BASE}/api/search/salaries`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Server error: ${res.status}`
+      );
+    }
+
+    const data: PagedResponse<SalaryResultResponse> = await res.json();
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Fetch available filter options
+ */
+export async function fetchFilterOptions(): Promise<
+  APIResponse<FilterOptionsResponse>
+> {
+  try {
+    const res = await fetch(`${BFF_BASE}/api/search/filters`);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data: FilterOptionsResponse = await res.json();
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

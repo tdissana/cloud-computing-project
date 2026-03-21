@@ -1,4 +1,4 @@
-import { APIResponse } from "@/types/identity";
+import { APIResponse } from "@/types/common";
 import { SalarySubmissionRequest, SalarySubmissionResponse } from "@/types/salary";
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
