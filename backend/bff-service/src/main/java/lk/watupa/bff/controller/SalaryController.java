@@ -34,44 +34,23 @@ public class SalaryController {
      * Body: { company, role, experienceLevel, baseSalary, totalCompensation,
      *         country, currency, anonymize }
      */
-    @PostMapping("/submissions")
-    public ResponseEntity<ApiResponse<Map>> submitSalary(
-            @RequestBody Map<String, Object> body
-    ) {
-        log.info("Salary submission request received");
-
-        String targetUrl = serviceProperties.getSalarySubmission().getUrl() + "/api/submissions";
-
-        ResponseEntity<Map> downstream = proxyService.forward(
-                targetUrl, HttpMethod.POST, body, Map.class
-        );
-
-        return ResponseEntity
-                .status(downstream.getStatusCode())
-                .body(ApiResponse.ok(downstream.getBody()));
-    }
-
-    // ── Search salaries (no auth needed) ─────────────────────────────────────
-
     /**
-     * GET /bff/api/search?company=...&role=...&experienceLevel=...&country=...
+     * POST /bff/api/search/salaries
+     *
+     * Preferred frontend endpoint that forwards a structured JSON search body
+     * to search-service /api/search/salaries.
      */
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Object>> searchSalaries(
-            @RequestParam Map<String, String> params
+    @PostMapping("/search/salaries")
+    public ResponseEntity<ApiResponse<Object>> searchSalariesPost(
+            @RequestBody(required = false) Map<String, Object> body
     ) {
-        log.debug("Search request params={}", params);
+        Map<String, Object> safeBody = (body == null) ? Map.of() : body;
+        log.debug("Search POST request body keys={}", safeBody.keySet());
 
-        String qs = params.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue())
-                .reduce((a, b) -> a + "&" + b)
-                .map(s -> "?" + s)
-                .orElse("");
-
-        String targetUrl = serviceProperties.getSearch().getUrl() + "/api/search" + qs;
+        String targetUrl = serviceProperties.getSearch().getUrl() + "/api/search/salaries";
 
         ResponseEntity<Object> downstream = proxyService.forward(
-                targetUrl, HttpMethod.GET, null, Object.class
+                targetUrl, HttpMethod.POST, safeBody, Object.class
         );
 
         return ResponseEntity
@@ -79,24 +58,16 @@ public class SalaryController {
                 .body(ApiResponse.ok(downstream.getBody()));
     }
 
-    // ── Stats (no auth needed) ────────────────────────────────────────────────
-
     /**
-     * GET /bff/api/stats?role=...&country=...
+     * GET /bff/api/search/filters
+     *
+     * Returns filter options used by the search page dropdowns.
      */
-    @GetMapping("/stats")
-    public ResponseEntity<ApiResponse<Object>> getStats(
-            @RequestParam Map<String, String> params
-    ) {
-        log.debug("Stats request params={}", params);
+    @GetMapping("/search/filters")
+    public ResponseEntity<ApiResponse<Object>> getSearchFilterOptions() {
+        log.debug("Search filter options request received");
 
-        String qs = params.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue())
-                .reduce((a, b) -> a + "&" + b)
-                .map(s -> "?" + s)
-                .orElse("");
-
-        String targetUrl = serviceProperties.getStats().getUrl() + "/api/stats" + qs;
+        String targetUrl = serviceProperties.getSearch().getUrl() + "/api/search/filters";
 
         ResponseEntity<Object> downstream = proxyService.forward(
                 targetUrl, HttpMethod.GET, null, Object.class
