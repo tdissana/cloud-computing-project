@@ -1,17 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-<<<<<<< HEAD
 import { Send, Lock, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react";
 
 import { submitSalary } from "@/lib/salary/submit";
 import { LEVELS, COUNTRIES, CURRENCIES } from "@/lib/salary/constants";
-=======
-import { Send, Lock, Eye, EyeOff, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react";
-
-import { submitSalary } from "@/lib/salary/submit";
-import { LEVELS, COUNTRIES, CURRENCIES, EXPERIENCE_OPTIONS } from "@/lib/salary/constants";
->>>>>>> development
 import { SalarySubmissionRequest } from "@/types/salary";
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -25,7 +18,6 @@ function validateForm(f: SalarySubmissionRequest): FormErrors {
     errs.role = "Please enter a job role (min 2 characters)";
   if (!f.company || f.company.trim().length < 2)
     errs.company = "Please enter a company name (min 2 characters)";
-<<<<<<< HEAD
   if (!f.experienceLevel)
     errs.experienceLevel = "Please select an experience level";
   if (!f.country)
@@ -36,18 +28,6 @@ function validateForm(f: SalarySubmissionRequest): FormErrors {
     errs.totalCompensation = "Please enter a valid total compensation";
   if (!f.currency)
     errs.currency = "Please select a currency";
-=======
-  if (!f.level)
-    errs.level = "Please select an experience level";
-  if (!f.country)
-    errs.country = "Please select a country";
-  if (!f.salary || f.salary <= 0)
-    errs.salary = "Please enter a valid salary amount";
-  if (!f.currency)
-    errs.currency = "Please select a currency";
-  if (f.yearsOfExperience === undefined || f.yearsOfExperience < 0)
-    errs.yearsOfExperience = "Please select years of experience";
->>>>>>> development
 
   return errs;
 }
@@ -249,7 +229,6 @@ function StepDot({ active, done, n }: { active: boolean; done: boolean; n: numbe
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const EMPTY_FORM: SalarySubmissionRequest = {
-<<<<<<< HEAD
   company: "",
   role: "",
   experienceLevel: "",
@@ -258,17 +237,6 @@ const EMPTY_FORM: SalarySubmissionRequest = {
   totalCompensation: 0,
   currency: "LKR",
   anonymize: true,
-=======
-  role: "",
-  company: "",
-  level: "",
-  country: "",
-  salary: 0,
-  currency: "LKR",
-  yearsOfExperience: -1,
-  anonymize: true,
-  additionalInfo: "",
->>>>>>> development
 };
 
 export default function SubmitPage() {
@@ -280,14 +248,9 @@ export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-<<<<<<< HEAD
   // Salary display values (strings for controlled inputs)
   const [baseSalaryStr, setBaseSalaryStr] = useState("");
   const [totalCompStr, setTotalCompStr] = useState("");
-=======
-  // Salary display value (string for controlled input)
-  const [salaryStr, setSalaryStr] = useState("");
->>>>>>> development
 
   // ── Particle canvas ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -362,11 +325,7 @@ export default function SubmitPage() {
     const step1Errors: FormErrors = {};
     if (!form.role || form.role.trim().length < 2) step1Errors.role = "Please enter a job role (min 2 characters)";
     if (!form.company || form.company.trim().length < 2) step1Errors.company = "Please enter a company name (min 2 characters)";
-<<<<<<< HEAD
     if (!form.experienceLevel) step1Errors.experienceLevel = "Please select an experience level";
-=======
-    if (!form.level) step1Errors.level = "Please select an experience level";
->>>>>>> development
     if (!form.country) step1Errors.country = "Please select a country";
 
     if (Object.keys(step1Errors).length > 0) {
@@ -398,25 +357,16 @@ export default function SubmitPage() {
 
   const handleReset = () => {
     setForm(EMPTY_FORM);
-<<<<<<< HEAD
     setBaseSalaryStr("");
     setTotalCompStr("");
-=======
-    setSalaryStr("");
->>>>>>> development
     setErrors({});
     setResult(null);
     setSubmitted(false);
     setStep(1);
   };
 
-<<<<<<< HEAD
   const step1Done = !!(form.role && form.company && form.experienceLevel && form.country);
   const step2Done = !!(form.baseSalary > 0 && form.totalCompensation > 0 && form.currency);
-=======
-  const step1Done = !!(form.role && form.company && form.level && form.country);
-  const step2Done = !!(form.salary > 0 && form.currency && form.yearsOfExperience >= 0);
->>>>>>> development
 
   return (
     <>
@@ -718,19 +668,11 @@ export default function SubmitPage() {
                         maxLength={80}
                       />
                       <SelectField
-<<<<<<< HEAD
                         id="experienceLevel"
                         label="Experience Level"
                         value={form.experienceLevel}
                         onChange={(v) => set("experienceLevel", v)}
                         error={errors.experienceLevel}
-=======
-                        id="level"
-                        label="Experience Level"
-                        value={form.level}
-                        onChange={(v) => set("level", v)}
-                        error={errors.level}
->>>>>>> development
                         options={LEVELS.map((l) => ({ value: l, label: l }))}
                       />
                       <SelectField
@@ -751,7 +693,6 @@ export default function SubmitPage() {
                   {/* ── Step 2: Compensation ── */}
                   {step === 2 && (
                     <div className="fade-up">
-<<<<<<< HEAD
                       {/* Currency row */}
                       <SelectField
                         id="currency"
@@ -795,64 +736,6 @@ export default function SubmitPage() {
                       {/* Helper note */}
                       <div style={{ marginBottom: "20px", fontSize: "11.5px", color: "#3a4560", lineHeight: 1.6 }}>
                         💡 <em>Total compensation includes base salary + bonuses, allowances, and any other benefits.</em>
-=======
-                      {/* Currency + Salary row */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "12px" }}>
-                        <SelectField
-                          id="currency"
-                          label="Currency"
-                          value={form.currency}
-                          onChange={(v) => set("currency", v)}
-                          error={errors.currency}
-                          options={CURRENCIES.map((c) => ({ value: c.code, label: c.code }))}
-                        />
-                        <FloatingField
-                          id="salary"
-                          label="Annual Salary"
-                          value={salaryStr}
-                          onChange={(v) => {
-                            setSalaryStr(v);
-                            const n = parseFloat(v.replace(/,/g, ""));
-                            set("salary", isNaN(n) ? 0 : n);
-                          }}
-                          error={errors.salary}
-                          type="number"
-                          placeholder="e.g. 1200000"
-                        />
-                      </div>
-
-                      <SelectField
-                        id="yearsOfExperience"
-                        label="Years of Experience"
-                        value={form.yearsOfExperience >= 0 ? String(form.yearsOfExperience) : ""}
-                        onChange={(v) => set("yearsOfExperience", Number(v))}
-                        error={errors.yearsOfExperience}
-                        options={EXPERIENCE_OPTIONS.map((e) => ({ value: String(e.value), label: e.label }))}
-                      />
-
-                      {/* Additional info */}
-                      <div style={{ marginBottom: "20px" }}>
-                        <label style={{ display: "block", fontSize: "10px", fontWeight: 600, color: "#4a5572", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
-                          Additional Info <span style={{ color: "#2a3050", fontWeight: 400 }}>(optional)</span>
-                        </label>
-                        <textarea
-                          value={form.additionalInfo}
-                          onChange={(e) => set("additionalInfo", e.target.value)}
-                          placeholder="e.g. Remote, equity included, specific tech stack..."
-                          maxLength={300}
-                          rows={3}
-                          style={{
-                            width: "100%", padding: "12px 14px",
-                            background: "#0f1524", border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: "10px", color: "#e8edf5", fontSize: "13.5px",
-                            fontFamily: "'Plus Jakarta Sans', sans-serif", outline: "none",
-                            resize: "vertical", lineHeight: 1.55,
-                            transition: "border-color 0.18s ease",
-                          }}
-                          onFocus={(e) => (e.target.style.borderColor = "rgba(110,168,254,0.5)")}
-                          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.08)")}
-                        />
->>>>>>> development
                       </div>
 
                       {/* Anonymize toggle */}

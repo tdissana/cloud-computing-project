@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 export const LEVELS = ["JUNIOR", "MID", "SENIOR", "LEAD"];
-=======
-export const LEVELS = ["Junior", "Mid", "Senior", "Lead", "Principal", "Manager"];
->>>>>>> development
 
 export const COUNTRIES = [
   "Sri Lanka",
