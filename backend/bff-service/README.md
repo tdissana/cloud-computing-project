@@ -29,7 +29,9 @@ BFF Service :8080          ← YOU ARE HERE
 | POST   | `/bff/api/auth/signup`  | ❌     | `identity-service /api/auth/signup`      |
 | POST   | `/bff/api/auth/login`   | ❌     | `identity-service /api/auth/login`       |
 | POST   | `/bff/api/submissions`  | ❌     | `salary-submission-service /api/submissions` |
-| GET    | `/bff/api/search`       | ❌     | `search-service /api/search`             |
+| POST   | `/bff/api/search/salaries` | ❌  | `search-service /api/search/salaries`    |
+| GET    | `/bff/api/search/filters`  | ❌  | `search-service /api/search/filters`     |
+| GET    | `/bff/api/search`          | ❌  | `search-service /api/search` (legacy)    |
 | GET    | `/bff/api/stats`        | ❌     | `stats-service /api/stats`               |
 | POST   | `/bff/api/votes`        | ✅ JWT | `vote-service /api/votes`                |
 | POST   | `/bff/api/reports`      | ✅ JWT | `vote-service /api/reports`              |

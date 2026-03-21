@@ -14,9 +14,11 @@ import java.util.Map;
 /**
  * BFF Salary Controller  — all routes are PUBLIC (no login required)
  *
- * POST  /bff/api/submissions          → salary-submission-service
- * GET   /bff/api/search               → search-service
- * GET   /bff/api/stats                → stats-service
+ * POST  /bff/api/submissions            → salary-submission-service
+ * POST  /bff/api/search/salaries        → search-service
+ * GET   /bff/api/search/filters         → search-service
+ * GET   /bff/api/search                 → search-service (legacy passthrough)
+ * GET   /bff/api/stats                  → stats-service
  */
 @Slf4j
 @RestController
@@ -54,7 +56,53 @@ public class SalaryController {
     // ── Search salaries (no auth needed) ─────────────────────────────────────
 
     /**
+     * POST /bff/api/search/salaries
+     *
+     * Preferred frontend endpoint that forwards a structured JSON search body
+     * to search-service /api/search/salaries.
+     */
+    @PostMapping("/search/salaries")
+    public ResponseEntity<ApiResponse<Object>> searchSalariesPost(
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        Map<String, Object> safeBody = (body == null) ? Map.of() : body;
+        log.debug("Search POST request body keys={}", safeBody.keySet());
+
+        String targetUrl = serviceProperties.getSearch().getUrl() + "/api/search/salaries";
+
+        ResponseEntity<Object> downstream = proxyService.forward(
+                targetUrl, HttpMethod.POST, safeBody, Object.class
+        );
+
+        return ResponseEntity
+                .status(downstream.getStatusCode())
+                .body(ApiResponse.ok(downstream.getBody()));
+    }
+
+    /**
+     * GET /bff/api/search/filters
+     *
+     * Returns filter options used by the search page dropdowns.
+     */
+    @GetMapping("/search/filters")
+    public ResponseEntity<ApiResponse<Object>> getSearchFilterOptions() {
+        log.debug("Search filter options request received");
+
+        String targetUrl = serviceProperties.getSearch().getUrl() + "/api/search/filters";
+
+        ResponseEntity<Object> downstream = proxyService.forward(
+                targetUrl, HttpMethod.GET, null, Object.class
+        );
+
+        return ResponseEntity
+                .status(downstream.getStatusCode())
+                .body(ApiResponse.ok(downstream.getBody()));
+    }
+
+    /**
      * GET /bff/api/search?company=...&role=...&experienceLevel=...&country=...
+     *
+     * Legacy passthrough endpoint kept for backward compatibility.
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<Object>> searchSalaries(

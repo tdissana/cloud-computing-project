@@ -207,6 +207,9 @@ export default function SearchPage() {
   const paginationInfo = results
     ? getPaginationInfo(results.page, results.size, results.totalElements)
     : null;
+  const selectedSortLabel =
+    SORT_OPTIONS.find((opt) => opt.value === (filters.sortBy || "approvedAt"))?.label ??
+    "Latest Submissions";
 
   return (
     <>
@@ -579,7 +582,7 @@ export default function SearchPage() {
                     }}
                   >
                     <SelectTrigger className="w-auto bg-white/[0.025] border-white/[0.07] text-[#e8edf5] text-sm">
-                      <SelectValue />
+                      <SelectValue>{selectedSortLabel}</SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-[#0f1524] border-white/[0.08]">
                       {SORT_OPTIONS.map((opt) => (
