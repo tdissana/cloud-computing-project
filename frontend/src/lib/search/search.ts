@@ -1,4 +1,4 @@
-import { APIResponse } from "@/types/identity";
+import { APIResponse } from "@/types/common";
 import {
   SalarySearchFilters,
   PagedResponse,
