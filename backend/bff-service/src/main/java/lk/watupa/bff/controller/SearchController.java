@@ -35,7 +35,7 @@ public class SearchController {
      * to search-service /api/search/salaries.
      */
     @PostMapping("/salaries")
-    public ResponseEntity<ApiResponse<Object>> searchSalariesPost(
+    public ResponseEntity<ApiResponse<Object>> searchSalaries(
             @RequestBody(required = false) Map<String, Object> body
     ) {
         Map<String, Object> safeBody = (body == null) ? Map.of() : body;
