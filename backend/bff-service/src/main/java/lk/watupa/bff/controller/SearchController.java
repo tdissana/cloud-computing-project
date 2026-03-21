@@ -20,28 +20,22 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/bff/api")
+@RequestMapping("/bff/api/search")
 @RequiredArgsConstructor
-public class SalaryController {
+public class SearchController {
 
     private final ProxyService proxyService;
     private final ServiceProperties serviceProperties;
 
     // ── Submit salary (no auth needed) ───────────────────────────────────────
-
-    /**
-     * POST /bff/api/submissions
-     * Body: { company, role, experienceLevel, baseSalary, totalCompensation,
-     *         country, currency, anonymize }
-     */
     /**
      * POST /bff/api/search/salaries
      *
      * Preferred frontend endpoint that forwards a structured JSON search body
      * to search-service /api/search/salaries.
      */
-    @PostMapping("/search/salaries")
-    public ResponseEntity<ApiResponse<Object>> searchSalariesPost(
+    @PostMapping("/salaries")
+    public ResponseEntity<ApiResponse<Object>> searchSalaries(
             @RequestBody(required = false) Map<String, Object> body
     ) {
         Map<String, Object> safeBody = (body == null) ? Map.of() : body;
@@ -63,7 +57,7 @@ public class SalaryController {
      *
      * Returns filter options used by the search page dropdowns.
      */
-    @GetMapping("/search/filters")
+    @GetMapping("/filters")
     public ResponseEntity<ApiResponse<Object>> getSearchFilterOptions() {
         log.debug("Search filter options request received");
 
