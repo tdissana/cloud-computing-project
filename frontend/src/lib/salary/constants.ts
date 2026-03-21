@@ -1,4 +1,4 @@
-export const LEVELS = ["Junior", "Mid", "Senior", "Lead", "Principal", "Manager"];
+export const LEVELS = ["JUNIOR", "MID", "SENIOR", "LEAD"];
 
 export const COUNTRIES = [
   "Sri Lanka",

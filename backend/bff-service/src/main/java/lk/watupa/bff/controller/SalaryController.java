@@ -40,7 +40,7 @@ public class SalaryController {
     ) {
         log.info("Salary submission request received");
 
-        String targetUrl = serviceProperties.getSalarySubmission().getUrl() + "/api/submissions";
+        String targetUrl = serviceProperties.getSalarySubmission().getUrl() + "/api/submissions/submit";
 
         ResponseEntity<Map> downstream = proxyService.forward(
                 targetUrl, HttpMethod.POST, body, Map.class

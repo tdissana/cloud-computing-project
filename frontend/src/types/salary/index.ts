@@ -1,13 +1,12 @@
 export interface SalarySubmissionRequest {
-  role: string;
   company: string;
-  level: string;
+  role: string;
+  experienceLevel: string;
   country: string;
-  salary: number;
+  baseSalary: number;
+  totalCompensation: number;
   currency: string;
-  yearsOfExperience: number;
   anonymize: boolean;
-  additionalInfo?: string;
 }
 
 export interface SalarySubmissionResponse {

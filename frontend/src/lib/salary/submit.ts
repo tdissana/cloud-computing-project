@@ -6,7 +6,7 @@ const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
 export async function submitSalary(
   data: SalarySubmissionRequest
 ): Promise<SalarySubmissionResponse> {
-  const res = await fetch(`${BFF_URL}/api/salary/submit`, {
+  const res = await fetch(`${BFF_URL}/api/submissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
