@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/bff/api")
 @RequiredArgsConstructor
-public class SalaryController {
+public class SearchController {
 
     private final ProxyService proxyService;
     private final ServiceProperties serviceProperties;
