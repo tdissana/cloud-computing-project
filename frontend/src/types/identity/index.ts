@@ -9,13 +9,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp?: string;
-}
-
 export interface SignupResponse {
   message: string;
 }
