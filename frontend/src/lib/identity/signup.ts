@@ -1,4 +1,5 @@
-import { APIResponse, SignupRequest, SignupResponse } from "@/types/identity";
+import { APIResponse } from "@/types/common";
+import { SignupRequest, SignupResponse } from "@/types/identity";
 
 const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
 
