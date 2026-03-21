@@ -22,12 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { searchSalaries, fetchFilterOptions } from "@/lib/search/search";
+import {
+  searchSalaries,
+  fetchFilterOptions,
+  voteSubmission,
+} from "@/lib/search/search";
 import {
   SENIORITY_LEVELS,
   EMPLOYMENT_TYPES,
-  CURRENCIES,
-  COUNTRIES,
   SORT_OPTIONS,
   PAGE_SIZES,
   DEFAULT_PAGE_SIZE,
@@ -66,6 +68,7 @@ export default function SearchPage() {
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [votingId, setVotingId] = useState<string | null>(null);
 
   // Load filter options on mount
   useEffect(() => {
@@ -189,6 +192,35 @@ export default function SearchPage() {
     const next = { ...draft, [key]: undefined };
     setDraft(next);
   };
+
+  const handleVote = useCallback(
+    async (submissionId: string, voteType: "UP" | "DOWN") => {
+      setVotingId(submissionId);
+      const result = await voteSubmission(submissionId, voteType);
+
+      if (!result.success) {
+        setError(result.error ?? "Failed to submit vote.");
+        setVotingId(null);
+        return;
+      }
+
+      setResults((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          content: prev.content.map((salary) => {
+            if (salary.id !== submissionId) return salary;
+            if (voteType === "UP") {
+              return { ...salary, upvotes: (salary.upvotes || 0) + 1 };
+            }
+            return { ...salary, downvotes: (salary.downvotes || 0) + 1 };
+          }),
+        };
+      });
+      setVotingId(null);
+    },
+    []
+  );
 
   const clearAll = () => {
     setDraft({});
@@ -361,30 +393,21 @@ export default function SearchPage() {
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
                     Country
                   </label>
-                  <Select
-                    value={draft.country ?? ""}
-                    onValueChange={(v: string | null) =>
-                      setDraft((p) => ({ ...p, country: (v || undefined) as string | undefined }))
-                    }
-                  >
-                    <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
-                      <SelectValue placeholder="Any country" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0f1524] border-white/[0.08]">
-                      <SelectItem value="" className="text-[#3a4560]">
-                        Any country
-                      </SelectItem>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem
-                          key={c}
-                          value={c}
-                          className="text-[#e8edf5] focus:bg-white/[0.05]"
-                        >
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {!loadingOptions && filterOptions ? (
+                    <SearchableSelect
+                      value={draft.country ?? ""}
+                      onChange={(value: string | null) =>
+                        setDraft((p) => ({
+                          ...p,
+                          country: (value || undefined) as string | undefined,
+                        }))
+                      }
+                      options={filterOptions.countries || []}
+                      placeholder="Search or type country..."
+                    />
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
                 </div>
 
                 {/* Seniority Level */}
@@ -460,30 +483,21 @@ export default function SearchPage() {
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
                     Currency
                   </label>
-                  <Select
-                    value={draft.currency ?? ""}
-                    onValueChange={(v: string | null) =>
-                      setDraft((p) => ({ ...p, currency: (v || undefined) as string | undefined }))
-                    }
-                  >
-                    <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
-                      <SelectValue placeholder="Any currency" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0f1524] border-white/[0.08]">
-                      <SelectItem value="" className="text-[#3a4560]">
-                        Any currency
-                      </SelectItem>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem
-                          key={c}
-                          value={c}
-                          className="text-[#e8edf5] focus:bg-white/[0.05]"
-                        >
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {!loadingOptions && filterOptions ? (
+                    <SearchableSelect
+                      value={draft.currency ?? ""}
+                      onChange={(value: string | null) =>
+                        setDraft((p) => ({
+                          ...p,
+                          currency: (value || undefined) as string | undefined,
+                        }))
+                      }
+                      options={filterOptions.currencies || []}
+                      placeholder="Search or type currency..."
+                    />
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
                 </div>
               </div>
 
@@ -602,7 +616,12 @@ export default function SearchPage() {
               {/* Salary Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {results.content.map((salary) => (
-                  <SalaryCard key={salary.id} salary={salary} />
+                  <SalaryCard
+                    key={salary.id}
+                    salary={salary}
+                    onVote={handleVote}
+                    voting={votingId === salary.id}
+                  />
                 ))}
               </div>
 
