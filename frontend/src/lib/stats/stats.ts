@@ -1,4 +1,4 @@
-import { APIResponse } from "@/types/identity";
+import { APIResponse } from "@/types/common";
 import { SalaryStatsResponse, StatsFilters } from "@/types/stats";
 
 const BFF_BASE = process.env.NEXT_PUBLIC_BFF_URL ?? "";
