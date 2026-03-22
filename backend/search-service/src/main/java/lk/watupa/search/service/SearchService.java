@@ -1,9 +1,11 @@
 package lk.watupa.search.service;
 
-import lk.watupa.search.payload.*;
 import lk.watupa.search.model.ApprovedSalary;
+import lk.watupa.search.model.VoteResult;
+import lk.watupa.search.payload.*;
 import lk.watupa.search.repository.SalarySearchRepository;
 import lk.watupa.search.repository.SalarySpecification;
+import lk.watupa.search.repository.VoteResultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,8 +15,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,27 +29,36 @@ public class SearchService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
-    private static final Set<String> SORTABLE_FIELDS = Set.of(
-            "grossMonthlySalary", "yearsOfExperience", "approvedAt", "upvotes"
+    private static final List<String> EMPLOYMENT_TYPES = List.of(
+            "Full-time", "Part-time", "Contract", "Freelance"
     );
 
-    private final SalarySearchRepository repository;
+    private static final DateTimeFormatter APPROVED_AT_FMT =
+            DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
-    /**
-     * Execute a filtered, paginated salary search.
-     * Anonymized records have company name and city masked in the response.
-     */
+    private final SalarySearchRepository repository;
+    private final VoteResultRepository voteResultRepository;
+
     public PagedResponse<SalaryResultResponse> search(SalarySearchRequest request) {
         Pageable pageable = buildPageable(request);
         Page<ApprovedSalary> page = repository.findAll(
                 SalarySpecification.fromRequest(request), pageable);
 
-        List<SalaryResultResponse> dtos = page.getContent().stream()
-                .map(this::toDto)
+        List<ApprovedSalary> rows = page.getContent();
+        List<String> idStrings = rows.stream()
+                .map(s -> String.valueOf(s.getId()))
                 .toList();
 
-        log.info("Search returned {} results (page {}/{})",
-                dtos.size(), page.getNumber(), page.getTotalPages());
+        Map<String, VoteResult> votesById = voteResultRepository.findByIdIn(idStrings).stream()
+                .collect(Collectors.toMap(VoteResult::getId, v -> v, (a, b) -> a));
+
+        List<SalaryResultResponse> dtos = rows.stream()
+                .map(s -> toDto(s, votesById.get(String.valueOf(s.getId()))))
+                .toList();
+
+        log.info("Search returned {} results (page {}/{}) verificationStatus={}",
+                dtos.size(), page.getNumber(), page.getTotalPages(),
+                request.getVerificationStatus());
 
         return PagedResponse.<SalaryResultResponse>builder()
                 .content(dtos)
@@ -56,48 +70,65 @@ public class SearchService {
                 .build();
     }
 
-    /**
-     * Return distinct filter values so the frontend can populate dropdowns.
-     */
     public FilterOptionsResponse getFilterOptions() {
         return FilterOptionsResponse.builder()
                 .countries(repository.findDistinctCountries())
                 .companies(repository.findDistinctCompanies())
                 .jobTitles(repository.findDistinctJobTitles())
-                .seniorityLevels(repository.findDistinctSeniorityLevels())
-                .employmentTypes(repository.findDistinctEmploymentTypes())
+                .seniorityLevels(repository.findDistinctExperienceLevels())
+                .employmentTypes(EMPLOYMENT_TYPES)
                 .currencies(repository.findDistinctCurrencies())
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // Mapping helpers
-    // -------------------------------------------------------------------------
+    private SalaryResultResponse toDto(ApprovedSalary s, VoteResult vote) {
+        boolean anon = Boolean.TRUE.equals(s.getAnonymize());
+        int up = vote != null ? vote.getUpVoteCount() : 0;
+        int down = vote != null ? vote.getDownVoteCount() : 0;
 
-    /**
-     * Map entity to DTO and apply anonymization masking.
-     * When anonymized=true:  companyName → "Anonymous", city → null
-     */
-    private SalaryResultResponse toDto(ApprovedSalary salary) {
-        boolean anon = Boolean.TRUE.equals(salary.getAnonymized());
+        Double gross = s.getBaseSalary();
+        Double additional = null;
+        if (s.getTotalCompensation() != null && s.getBaseSalary() != null) {
+            double diff = s.getTotalCompensation() - s.getBaseSalary();
+            if (diff > 0) {
+                additional = diff;
+            }
+        }
+
+        String approvedAt = s.getTimestamp() == null
+                ? null
+                : APPROVED_AT_FMT.format(s.getTimestamp().atOffset(ZoneOffset.UTC));
+
+        String level = s.getExperienceLevel() == null
+                ? ""
+                : titleCaseWord(s.getExperienceLevel());
+
         return SalaryResultResponse.builder()
-                .id(salary.getId())
-                .companyName(anon ? "Anonymous" : salary.getCompanyName())
-                .jobTitle(salary.getJobTitle())
-                .seniorityLevel(salary.getSeniorityLevel())
-                .employmentType(salary.getEmploymentType())
-                .country(salary.getCountry())
-                .city(anon ? null : salary.getCity())
-                .grossMonthlySalary(salary.getGrossMonthlySalary())
-                .currency(salary.getCurrency())
-                .additionalCompensation(salary.getAdditionalCompensation())
-                .yearsOfExperience(salary.getYearsOfExperience())
-                .techStack(salary.getTechStack())
+                .id(String.valueOf(s.getId()))
+                .companyName(anon ? "Anonymous" : s.getCompanyName())
+                .jobTitle(s.getJobTitle())
+                .seniorityLevel(level)
+                .employmentType("Full-time")
+                .country(s.getCountry())
+                .city(anon ? null : null)
+                .grossMonthlySalary(gross)
+                .currency(s.getCurrency())
+                .additionalCompensation(additional)
+                .yearsOfExperience(s.getSeniority())
+                .techStack(s.getSkills() != null ? s.getSkills() : "")
                 .anonymized(anon)
-                .approvedAt(salary.getApprovedAt())
-                .upvotes(salary.getUpvotes())
-                .downvotes(salary.getDownvotes())
+                .approvedAt(approvedAt != null ? approvedAt : "")
+                .upvotes(up)
+                .downvotes(down)
+                .status(s.getStatus())
                 .build();
+    }
+
+    private static String titleCaseWord(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        return Character.toUpperCase(raw.charAt(0)) + raw.substring(1).toLowerCase();
     }
 
     private Pageable buildPageable(SalarySearchRequest req) {
@@ -106,14 +137,30 @@ public class SearchService {
                 ? Math.min(req.getSize(), MAX_PAGE_SIZE)
                 : DEFAULT_PAGE_SIZE;
 
-        String sortField = (req.getSortBy() != null && SORTABLE_FIELDS.contains(req.getSortBy()))
-                ? req.getSortBy()
-                : "approvedAt";
+        String sortField = mapSortToEntityProperty(req.getSortBy());
 
         Sort.Direction dir = "asc".equalsIgnoreCase(req.getSortDir())
                 ? Sort.Direction.ASC
                 : Sort.Direction.DESC;
 
         return PageRequest.of(page, size, Sort.by(dir, sortField));
+    }
+
+    private String mapSortToEntityProperty(String sortBy) {
+        if (sortBy == null) {
+            return "timestamp";
+        }
+        String s = sortBy.toLowerCase();
+        return switch (s) {
+            case "approvedat" -> "timestamp";
+            case "grossmonthlysalary" -> "baseSalary";
+            case "yearsofexperience" -> "seniority";
+            case "upvotes" -> "timestamp";
+            case "basesalary" -> "baseSalary";
+            case "totalcompensation" -> "totalCompensation";
+            case "seniority" -> "seniority";
+            case "timestamp" -> "timestamp";
+            default -> "timestamp";
+        };
     }
 }

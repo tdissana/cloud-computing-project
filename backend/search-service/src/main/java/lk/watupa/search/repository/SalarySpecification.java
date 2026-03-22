@@ -1,8 +1,8 @@
 package lk.watupa.search.repository;
 
 import jakarta.persistence.criteria.Predicate;
-import lk.watupa.search.payload.SalarySearchRequest;
 import lk.watupa.search.model.ApprovedSalary;
+import lk.watupa.search.payload.SalarySearchRequest;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Builds a JPA Specification dynamically from the search request.
- * Each filter is only applied when its corresponding field is non-null/non-blank.
+ * Restricts by verification status (verified = APPROVED only; unverified = not approved).
  */
 public class SalarySpecification {
 
@@ -20,6 +20,19 @@ public class SalarySpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            String vs = req.getVerificationStatus();
+            if (vs != null && !vs.isBlank()) {
+                if ("VERIFIED".equalsIgnoreCase(vs)) {
+                    predicates.add(cb.equal(root.get("status"), "APPROVED"));
+                } else if ("UNVERIFIED".equalsIgnoreCase(vs)) {
+                    predicates.add(cb.notEqual(root.get("status"), "APPROVED"));
+                }
+                // If "BOTH", no status filter is applied (shows all statuses)
+            } else {
+                // Default to VERIFIED if not specified
+                predicates.add(cb.equal(root.get("status"), "APPROVED"));
+            }
+
             if (hasValue(req.getCountry())) {
                 predicates.add(cb.like(
                         cb.lower(root.get("country")),
@@ -27,9 +40,8 @@ public class SalarySpecification {
             }
 
             if (hasValue(req.getCompany())) {
-                // Only match non-anonymized records when filtering by company
                 predicates.add(cb.and(
-                        cb.equal(root.get("anonymized"), false),
+                        cb.equal(root.get("anonymize"), false),
                         cb.like(cb.lower(root.get("companyName")),
                                 "%" + req.getCompany().toLowerCase() + "%")
                 ));
@@ -41,16 +53,10 @@ public class SalarySpecification {
                         "%" + req.getJobTitle().toLowerCase() + "%"));
             }
 
-            if (hasValue(req.getSeniorityLevel())) {
+            if (hasValue(req.getExperienceLevel())) {
                 predicates.add(cb.equal(
-                        cb.lower(root.get("seniorityLevel")),
-                        req.getSeniorityLevel().toLowerCase()));
-            }
-
-            if (hasValue(req.getEmploymentType())) {
-                predicates.add(cb.equal(
-                        cb.lower(root.get("employmentType")),
-                        req.getEmploymentType().toLowerCase()));
+                        cb.lower(root.get("experienceLevel")),
+                        req.getExperienceLevel().toLowerCase()));
             }
 
             if (hasValue(req.getCurrency())) {
@@ -59,14 +65,14 @@ public class SalarySpecification {
                         req.getCurrency().toUpperCase()));
             }
 
-            if (req.getMinExperience() != null) {
+            if (req.getMinSeniority() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(
-                        root.get("yearsOfExperience"), req.getMinExperience()));
+                        root.get("seniority"), req.getMinSeniority()));
             }
 
-            if (req.getMaxExperience() != null) {
+            if (req.getMaxSeniority() != null) {
                 predicates.add(cb.lessThanOrEqualTo(
-                        root.get("yearsOfExperience"), req.getMaxExperience()));
+                        root.get("seniority"), req.getMaxSeniority()));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

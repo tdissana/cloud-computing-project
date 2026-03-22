@@ -43,6 +43,10 @@ export async function searchSalaries(
   if (filters.minExperience !== undefined) body.minExperience = filters.minExperience;
   if (filters.maxExperience !== undefined) body.maxExperience = filters.maxExperience;
 
+  if (filters.verificationStatus) {
+    body.verificationStatus = filters.verificationStatus;
+  }
+
   // Pagination
   body.page = filters.page ?? 0;
   body.size = filters.size ?? 20;
