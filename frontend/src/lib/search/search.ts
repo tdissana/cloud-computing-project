@@ -107,3 +107,47 @@ export async function fetchFilterOptions(): Promise<
     };
   }
 }
+
+export async function voteSubmission(
+  submissionId: string,
+  voteType: "UP" | "DOWN"
+): Promise<APIResponse<unknown>> {
+  try {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+    if (!token) {
+      return {
+        success: false,
+        error: "Please log in to vote.",
+      };
+    }
+
+    const res = await fetch(`${BFF_BASE}/api/votes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ submissionId, voteType }),
+    });
+
+    const payload: APIResponse<unknown> = await res
+      .json()
+      .catch(() => ({ success: false, error: `Server error: ${res.status}` }));
+
+    if (!res.ok || !payload.success) {
+      return {
+        success: false,
+        error: getErrorMessage(payload, `Server error: ${res.status}`),
+      };
+    }
+
+    return { success: true, data: payload.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

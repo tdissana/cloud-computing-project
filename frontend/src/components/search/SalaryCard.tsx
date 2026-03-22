@@ -2,13 +2,15 @@ import { SalaryResultResponse } from "@/types/search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatSalary, formatDateTime } from "@/lib/search/helpers";
-import { TrendingUp, MapPin, Code, Lock } from "lucide-react";
+import { MapPin, Code, Lock, ThumbsUp, ThumbsDown } from "lucide-react";
 
 interface SalaryCardProps {
   salary: SalaryResultResponse;
+  onVote: (submissionId: string, voteType: "UP" | "DOWN") => void;
+  voting?: boolean;
 }
 
-export function SalaryCard({ salary }: SalaryCardProps) {
+export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) {
   return (
     <Card className="bg-white/[0.025] border-white/[0.07] backdrop-blur-xl hover:border-white/[0.14] transition-colors hover:bg-white/[0.035]">
       <CardContent className="pt-6 space-y-4">
@@ -100,11 +102,27 @@ export function SalaryCard({ salary }: SalaryCardProps) {
 
         {/* Votes & Date */}
         <div className="border-t border-white/[0.07] pt-3 flex items-center justify-between text-xs text-[#3a4560]">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              <span>{salary.upvotes || 0} upvotes</span>
-            </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onVote(salary.id, "UP")}
+              disabled={voting}
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#a5c8fe] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ThumbsUp className="w-3 h-3" />
+              <span>Up Vote</span>
+              <span className="font-semibold">{salary.upvotes || 0}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onVote(salary.id, "DOWN")}
+              disabled={voting}
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#f2a5a5] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ThumbsDown className="w-3 h-3" />
+              <span>Down Vote</span>
+              <span className="font-semibold">{salary.downvotes || 0}</span>
+            </button>
           </div>
           <span>{formatDateTime(salary.approvedAt)}</span>
         </div>
