@@ -361,7 +361,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
 
 
 
-          <Card className="bg-white/[0.025] border-white/[0.07] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <Card className="bg-white/[0.025] border-white/[0.07] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-visible">
             <CardHeader className="pb-4">
               <CardTitle
                 className="text-base font-bold text-[#e8edf5] flex items-center gap-2 uppercase tracking-widest"
@@ -371,7 +371,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                 Search Filters
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 overflow-visible pb-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
                 <div className="space-y-1.5">

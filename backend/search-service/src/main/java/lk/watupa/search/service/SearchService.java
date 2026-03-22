@@ -56,12 +56,15 @@ public class SearchService {
                 .map(s -> toDto(s, votesById.get(String.valueOf(s.getId()))))
                 .toList();
 
+        // Apply in-memory sorting for vote-based sorts
+        List<SalaryResultResponse> sortedDtos = sortResults(dtos, request);
+
         log.info("Search returned {} results (page {}/{}) verificationStatus={}",
-                dtos.size(), page.getNumber(), page.getTotalPages(),
+                sortedDtos.size(), page.getNumber(), page.getTotalPages(),
                 request.getVerificationStatus());
 
         return PagedResponse.<SalaryResultResponse>builder()
-                .content(dtos)
+                .content(sortedDtos)
                 .page(page.getNumber())
                 .size(page.getSize())
                 .totalElements(page.getTotalElements())
@@ -146,6 +149,27 @@ public class SearchService {
         return PageRequest.of(page, size, Sort.by(dir, sortField));
     }
 
+    private List<SalaryResultResponse> sortResults(List<SalaryResultResponse> dtos, SalarySearchRequest request) {
+        String sortBy = request.getSortBy();
+        if (sortBy == null) {
+            return dtos;
+        }
+
+        String sortField = sortBy.toLowerCase();
+        boolean ascending = "asc".equalsIgnoreCase(request.getSortDir());
+
+        return dtos.stream()
+                .sorted((a, b) -> {
+                    int compare = switch (sortField) {
+                        case "upvotes" -> Integer.compare(a.getUpvotes(), b.getUpvotes());
+                        case "downvotes" -> Integer.compare(a.getDownvotes(), b.getDownvotes());
+                        default -> 0;  // No in-memory sort for DB fields
+                    };
+                    return ascending ? compare : -compare;
+                })
+                .toList();
+    }
+
     private String mapSortToEntityProperty(String sortBy) {
         if (sortBy == null) {
             return "timestamp";
@@ -155,7 +179,7 @@ public class SearchService {
             case "approvedat" -> "timestamp";
             case "grossmonthlysalary" -> "baseSalary";
             case "yearsofexperience" -> "seniority";
-            case "upvotes" -> "timestamp";
+            case "upvotes", "downvotes" -> "timestamp";  // Ignored for DB, sorted in-memory
             case "basesalary" -> "baseSalary";
             case "totalcompensation" -> "totalCompensation";
             case "seniority" -> "seniority";
