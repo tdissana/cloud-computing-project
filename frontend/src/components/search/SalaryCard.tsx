@@ -110,7 +110,7 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
               className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#a5c8fe] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ThumbsUp className="w-3 h-3" />
-              <span>Like</span>
+              <span>Up Vote</span>
               <span className="font-semibold">{salary.upvotes || 0}</span>
             </button>
             <button
@@ -120,7 +120,7 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
               className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#f2a5a5] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ThumbsDown className="w-3 h-3" />
-              <span>Dislike</span>
+              <span>Down Vote</span>
               <span className="font-semibold">{salary.downvotes || 0}</span>
             </button>
           </div>
