@@ -1,4 +1,4 @@
-package lk.watupa.bff.dto;
+package lk.watupa.bff.payload;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -8,12 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
-/**
- * Uniform envelope for every BFF response.
- *
- * Success:  { success: true,  data: {...},  error: null,  timestamp: "..." }
- * Failure:  { success: false, data: null,   error: "...", timestamp: "..." }
- */
 @Data
 @Builder
 @NoArgsConstructor

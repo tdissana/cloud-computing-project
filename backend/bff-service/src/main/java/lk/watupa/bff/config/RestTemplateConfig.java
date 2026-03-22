@@ -17,11 +17,6 @@ public class RestTemplateConfig {
     @Value("${http-client.read-timeout:10000}")
     private int readTimeout;
 
-    /**
-     * Single shared RestTemplate with sensible timeouts.
-     * In production you would replace this with WebClient (reactive)
-     * or a dedicated Feign client per service.
-     */
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
