@@ -12,14 +12,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
-/**
- * Generic HTTP proxy helper.
- *
- * All BFF controllers delegate actual HTTP calls to this service so that:
- *  - Error extraction logic lives in one place.
- *  - Headers (Authorization, X-User-Id) are forwarded consistently.
- *  - Downstream error messages bubble up cleanly to the client.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,12 +19,6 @@ public class ProxyService {
 
     private final RestTemplate restTemplate;
 
-    // ── Public API ─────────────────────────────────────────────────────────────
-
-    /**
-     * Forward a request to a downstream service without any auth header.
-     * Used for public endpoints (signup, login, search, submit salary, stats).
-     */
     public <Req, Res> ResponseEntity<Res> forward(
             String url,
             HttpMethod method,
@@ -42,10 +28,6 @@ public class ProxyService {
         return forward(url, method, body, null, responseType);
     }
 
-    /**
-     * Forward a request, optionally injecting extra headers.
-     * Used for protected endpoints (vote, report) where X-User-Id must be set.
-     */
     public <Req, Res> ResponseEntity<Res> forward(
             String url,
             HttpMethod method,
@@ -70,7 +52,6 @@ public class ProxyService {
             return response;
 
         } catch (HttpStatusCodeException ex) {
-            // Extract the message from the downstream JSON error body if possible
             String message = extractMessage(ex);
             log.warn("Downstream {} responded with {}: {}", url, ex.getStatusCode(), message);
             throw new DownstreamException(
@@ -80,17 +61,11 @@ public class ProxyService {
         }
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    /**
-     * Tries to parse { "message": "..." } from the downstream error body.
-     * Falls back to the raw body string if parsing fails.
-     */
     private String extractMessage(HttpStatusCodeException ex) {
         try {
             String body = ex.getResponseBodyAsString();
 
-            if (body == null || body.isBlank()) {
+            if (body.isBlank()) {
                 return ex.getStatusText();
             }
 

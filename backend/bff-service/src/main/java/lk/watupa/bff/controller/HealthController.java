@@ -1,7 +1,7 @@
 package lk.watupa.bff.controller;
 
 import lk.watupa.bff.config.ServiceProperties;
-import lk.watupa.bff.dto.ApiResponse;
+import lk.watupa.bff.payload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,12 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Map;
 
-/**
- * Simple info endpoint for smoke-testing and debugging.
- * The actual K8s probes use Spring Actuator:
- *   /actuator/health/liveness
- *   /actuator/health/readiness
- */
 @RestController
 @RequestMapping("/bff")
 @RequiredArgsConstructor

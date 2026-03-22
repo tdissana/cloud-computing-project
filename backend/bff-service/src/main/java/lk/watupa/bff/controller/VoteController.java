@@ -1,7 +1,7 @@
 package lk.watupa.bff.controller;
 
 import lk.watupa.bff.config.ServiceProperties;
-import lk.watupa.bff.dto.ApiResponse;
+import lk.watupa.bff.payload.ApiResponse;
 import lk.watupa.bff.exception.DownstreamException;
 import lk.watupa.bff.service.AuthTokenService;
 import lk.watupa.bff.service.ProxyService;
@@ -14,18 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * BFF Vote Controller  — PROTECTED (JWT required)
- *
- * POST   /bff/api/votes      → vote-service  (upvote / downvote)
- * POST   /bff/api/reports    → vote-service  (report a submission)
- *
- * The BFF:
- *  1. Validates the Authorization header exists.
- *  2. Calls identity-service /api/auth/validate to get the userId.
- *  3. Injects X-User-Id header before forwarding to vote-service.
- *  4. The raw JWT is NEVER forwarded to downstream services.
- */
 @Slf4j
 @RestController
 @RequestMapping("/bff/api")
@@ -36,13 +24,6 @@ public class VoteController {
     private final AuthTokenService  authTokenService;
     private final ServiceProperties serviceProperties;
 
-    // ── Vote (upvote / downvote) ──────────────────────────────────────────────
-
-    /**
-     * POST /bff/api/votes
-     * Headers: Authorization: Bearer <token>
-     * Body: { submissionId: "uuid", voteType: "UP" | "DOWN" }
-     */
     @PostMapping("/votes")
     public ResponseEntity<ApiResponse<Map>> vote(
             @RequestHeader(value = "Authorization", required = false) String authorization,
@@ -66,13 +47,6 @@ public class VoteController {
                 .body(ApiResponse.ok(downstream.getBody()));
     }
 
-    // ── Report a submission ───────────────────────────────────────────────────
-
-    /**
-     * POST /bff/api/reports
-     * Headers: Authorization: Bearer <token>
-     * Body: { submissionId: "uuid", reason: "..." }
-     */
     @PostMapping("/reports")
     public ResponseEntity<ApiResponse<Map>> report(
             @RequestHeader(value = "Authorization", required = false) String authorization,
@@ -96,12 +70,6 @@ public class VoteController {
                 .body(ApiResponse.ok(downstream.getBody()));
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    /**
-     * Guards a protected route.
-     * Returns the userId if the token is valid, throws 401 otherwise.
-     */
     private String requireAuth(String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             throw new DownstreamException(

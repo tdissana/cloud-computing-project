@@ -1,7 +1,7 @@
 package lk.watupa.bff.controller;
 
 import lk.watupa.bff.config.ServiceProperties;
-import lk.watupa.bff.dto.ApiResponse;
+import lk.watupa.bff.payload.ApiResponse;
 import lk.watupa.bff.service.ProxyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

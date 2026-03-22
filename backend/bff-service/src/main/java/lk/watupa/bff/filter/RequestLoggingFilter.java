@@ -9,10 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * Logs every inbound HTTP request with method, URI, status and duration.
- * Order(1) ensures it runs before other filters.
- */
 @Slf4j
 @Component
 @Order(1)
