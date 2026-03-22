@@ -13,7 +13,7 @@ export async function fetchStats(
   if (filters.country) params.set("country", filters.country);
 
   try {
-    const res = await fetch(`${BFF_BASE}/bff/api/stats?${params.toString()}`);
+    const res = await fetch(`${BFF_BASE}/api/stats?${params.toString()}`);
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
     const json: { success: boolean; data: SalaryStatsResponse } = await res.json();
     return { success: true, data: json.data };

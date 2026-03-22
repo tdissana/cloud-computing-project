@@ -1,11 +1,8 @@
-package lk.watupa.bff.dto;
+package lk.watupa.bff.payload;
 
 import lombok.Data;
 
-/**
- * DTOs for the stats-service contract.
- */
-public class StatsDto {
+public class StatsPayload {
 
     @Data
     public static class StatsResponse {
