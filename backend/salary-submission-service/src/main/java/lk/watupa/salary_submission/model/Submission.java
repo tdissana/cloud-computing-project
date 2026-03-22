@@ -1,61 +1,66 @@
-    package lk.watupa.salary_submission.model;
+package lk.watupa.salary_submission.model;
 
-    import jakarta.persistence.*;
-    import lk.watupa.salary_submission.enums.ExperienceLevel;
-    import lk.watupa.salary_submission.enums.Status;
-    import lombok.*;
-    import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.*;
+import lk.watupa.salary_submission.enums.ExperienceLevel;
+import lk.watupa.salary_submission.enums.Status;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
-    import java.time.LocalDateTime;
-    import java.util.UUID;
+import java.time.LocalDateTime;
 
-    @Entity
-    @Table(schema = "salary", name = "submissions")
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public class Submission {
+@Entity
+@Table(schema = "salary", name = "submission")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Submission {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.UUID)
-        private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-        @Column(length = 255)
-        private String company;
+    @Column(name = "company_name", length = 255)
+    private String companyName;
 
-        @Column(length = 255)
-        private String role;
+    @Column(name = "job_title", length = 255)
+    private String jobTitle;
 
-        @Enumerated(EnumType.STRING)
-        @Column(name = "experience_level", length = 50)
-        private ExperienceLevel experienceLevel;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "experience_level", length = 50)
+    private ExperienceLevel experienceLevel;
 
-        @Column(length = 100)
-        @Builder.Default
-        private String country = "Sri Lanka";
+    @Column(name = "seniority")
+    private Integer seniority;
 
-        @Column(name = "total_compensation")
-        private double totalCompensation;
+    @Column(length = 100)
+    @Builder.Default
+    private String country = "Sri Lanka";
 
-        @Column(name = "base_salary")
-        private double baseSalary;
+    @Column(length = 10)
+    @Builder.Default
+    private String currency = "LKR";
 
-        @Column(length = 10)
-        @Builder.Default
-        private String currency = "LKR";
+    @Column(name = "total_compensation")
+    private Double totalCompensation;
 
-        @Column
-        @Builder.Default
-        private Boolean anonymize = true;
+    @Column(name = "base_salary")
+    private Double baseSalary;
 
-        @Enumerated(EnumType.STRING)
-        @Column(length = 20)
-        @Builder.Default
-        private Status status = Status.PENDING;
+    @Column(columnDefinition = "TEXT")
+    private String skills;
 
-        @CreationTimestamp
-        @Column(name = "created_at", updatable = false)
-        private LocalDateTime createdAt;
-    }
+    @Column
+    @Builder.Default
+    private Boolean anonymize = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    @Builder.Default
+    private Status status = Status.PENDING;
+
+    @CreationTimestamp
+    @Column(name = "timestamp", updatable = false)
+    private LocalDateTime timestamp;
+}

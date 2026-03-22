@@ -5,36 +5,36 @@ import lk.watupa.salary_submission.enums.Status;
 import lk.watupa.salary_submission.model.Submission;
 import lk.watupa.salary_submission.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SubmissionService {
-    @Autowired
-    private SubmissionRepository submissionRepository;
 
-    public UUID submit(
-            String company,
-            String role,
+    private final SubmissionRepository submissionRepository;
+
+    public Long submit(
+            String companyName,
+            String jobTitle,
             ExperienceLevel experienceLevel,
+            Integer seniority,
             String country,
-            double baseSalary,
-            double totalCompensation,
             String currency,
+            Double totalCompensation,
+            Double baseSalary,
+            String skills,
             boolean anonymize
-            )
-    {
+    ) {
         Submission submission = Submission.builder()
-                .company(company)
-                .role(role)
+                .companyName(companyName)
+                .jobTitle(jobTitle)
                 .experienceLevel(experienceLevel)
+                .seniority(seniority)
                 .country(country)
-                .baseSalary(baseSalary)
-                .totalCompensation(totalCompensation)
                 .currency(currency)
+                .totalCompensation(totalCompensation)
+                .baseSalary(baseSalary)
+                .skills(skills)
                 .anonymize(anonymize)
                 .status(Status.PENDING)
                 .build();

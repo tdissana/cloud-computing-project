@@ -299,7 +299,7 @@ export default function StatsPage() {
 
           {/* ── Empty state (post-search) ── */}
           {searched && !loading && stats?.count === 0 && !error && (
-            <p className="text-[#4a5572] text-sm">No results for given filters.</p>
+            <p className="text-[#4a5572] text-sm">No results for given filter(s)</p>
           )}
 
           {/* ── Results ── */}
