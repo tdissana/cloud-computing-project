@@ -34,7 +34,7 @@ public class StatsService {
         }
 
         List<Double> salaries = submissions.stream()
-                .map(Submission::getSalaryAmount)
+                .map(Submission::getTotalCompensation)
                 .sorted()
                 .toList();
 
@@ -49,7 +49,6 @@ public class StatsService {
                 .p90(computePercentile(salaries, 90))
                 .build();
     }
-
 
     private double computeAverage(List<Double> sorted) {
         return sorted.stream()
@@ -67,7 +66,6 @@ public class StatsService {
 
         if (lower == upper) return sorted.get(lower);
 
-        // Linear interpolation between neighbours
         double fraction = index - lower;
         return sorted.get(lower) + fraction * (sorted.get(upper) - sorted.get(lower));
     }
