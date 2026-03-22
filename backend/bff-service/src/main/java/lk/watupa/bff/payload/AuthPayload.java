@@ -1,15 +1,11 @@
-package lk.watupa.bff.dto;
+package lk.watupa.bff.payload;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-// ─── Auth DTOs (mirror identity-service payload classes) ─────────────────────
-
-public class AuthDto {
-
-    // ── Signup ────────────────────────────────────────────────────────────────
+public class AuthPayload {
 
     @Data
     public static class SignupRequest {
@@ -31,8 +27,6 @@ public class AuthDto {
     public static class SignupResponse {
         private String message;
     }
-
-    // ── Login ─────────────────────────────────────────────────────────────────
 
     @Data
     public static class LoginRequest {

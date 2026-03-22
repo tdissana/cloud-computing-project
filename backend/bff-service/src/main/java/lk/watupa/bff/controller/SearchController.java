@@ -1,7 +1,7 @@
 package lk.watupa.bff.controller;
 
 import lk.watupa.bff.config.ServiceProperties;
-import lk.watupa.bff.dto.ApiResponse;
+import lk.watupa.bff.payload.ApiResponse;
 import lk.watupa.bff.service.ProxyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * BFF Salary Controller  — all routes are PUBLIC (no login required)
- *
- * POST  /bff/api/submissions          → salary-submission-service
- * GET   /bff/api/search               → search-service
- * GET   /bff/api/stats                → stats-service
- */
 @Slf4j
 @RestController
 @RequestMapping("/bff/api/search")
@@ -27,13 +20,6 @@ public class SearchController {
     private final ProxyService proxyService;
     private final ServiceProperties serviceProperties;
 
-    // ── Submit salary (no auth needed) ───────────────────────────────────────
-    /**
-     * POST /bff/api/search/salaries
-     *
-     * Preferred frontend endpoint that forwards a structured JSON search body
-     * to search-service /api/search/salaries.
-     */
     @PostMapping("/salaries")
     public ResponseEntity<ApiResponse<Object>> searchSalaries(
             @RequestBody(required = false) Map<String, Object> body
@@ -52,11 +38,6 @@ public class SearchController {
                 .body(ApiResponse.ok(downstream.getBody()));
     }
 
-    /**
-     * GET /bff/api/search/filters
-     *
-     * Returns filter options used by the search page dropdowns.
-     */
     @GetMapping("/filters")
     public ResponseEntity<ApiResponse<Object>> getSearchFilterOptions() {
         log.debug("Search filter options request received");

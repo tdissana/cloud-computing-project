@@ -3,10 +3,6 @@ package lk.watupa.bff.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Binds the 'services' block in application.yml.
- * Each inner class maps to one downstream microservice.
- */
 @Data
 @ConfigurationProperties(prefix = "services")
 public class ServiceProperties {
