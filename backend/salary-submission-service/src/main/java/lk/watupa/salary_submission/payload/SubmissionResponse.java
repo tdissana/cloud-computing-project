@@ -5,36 +5,39 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 public class SubmissionResponse {
-    private UUID id;
-    private String company;
-    private String role;
+    private Long id;
+    private String companyName;
+    private String jobTitle;
     private String experienceLevel;
+    private Integer seniority;
     private String country;
-    private double baseSalary;
-    private double totalCompensation;
-    private String  currency;
+    private String currency;
+    private Double totalCompensation;
+    private Double baseSalary;
+    private String skills;
     private boolean anonymize;
-    private String  status;
-    private LocalDateTime createdAt;
+    private String status;
+    private LocalDateTime timestamp;
 
-    public static SubmissionResponse from(Submission submission) {
+    public static SubmissionResponse from(Submission s) {
         return SubmissionResponse.builder()
-                .id(submission.getId())
-                .company(submission.getAnonymize() ? null : submission.getCompany())
-                .role(submission.getRole())
-                .experienceLevel(submission.getExperienceLevel() != null ? submission.getExperienceLevel().name() : null)
-                .country(submission.getCountry())
-                .baseSalary(submission.getBaseSalary())
-                .totalCompensation(submission.getTotalCompensation())
-                .currency(submission.getCurrency())
-                .anonymize(Boolean.TRUE.equals(submission.getAnonymize()))
-                .status(submission.getStatus() != null ? submission.getStatus().name() : null)
-                .createdAt(submission.getCreatedAt())
+                .id(s.getId())
+                .companyName(Boolean.TRUE.equals(s.getAnonymize()) ? null : s.getCompanyName())
+                .jobTitle(s.getJobTitle())
+                .experienceLevel(s.getExperienceLevel() != null ? s.getExperienceLevel().name() : null)
+                .seniority(s.getSeniority())
+                .country(s.getCountry())
+                .currency(s.getCurrency())
+                .totalCompensation(s.getTotalCompensation())
+                .baseSalary(s.getBaseSalary())
+                .skills(s.getSkills())
+                .anonymize(Boolean.TRUE.equals(s.getAnonymize()))
+                .status(s.getStatus() != null ? s.getStatus().name() : null)
+                .timestamp(s.getTimestamp())
                 .build();
     }
 }

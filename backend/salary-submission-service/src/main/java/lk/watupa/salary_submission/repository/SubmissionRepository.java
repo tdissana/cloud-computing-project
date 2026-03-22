@@ -11,31 +11,27 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SubmissionRepository extends JpaRepository<Submission,Long > {
-    /** All approved submissions (public feed). */
+public interface SubmissionRepository extends JpaRepository<Submission, Long> {
+
     Page<Submission> findByStatus(Status status, Pageable pageable);
 
-    /** Filter by company (case-insensitive) and status. */
-    Page<Submission> findByCompanyIgnoreCaseAndStatus(String company, Status status, Pageable pageable);
+    Page<Submission> findByCompanyNameIgnoreCaseAndStatus(String companyName, Status status, Pageable pageable);
 
-    /** Filter by role and status. */
-    Page<Submission> findByRoleIgnoreCaseAndStatus(String role, Status status, Pageable pageable);
+    Page<Submission> findByJobTitleIgnoreCaseAndStatus(String jobTitle, Status status, Pageable pageable);
 
-    /** Filter by experience level and status. */
     Page<Submission> findByExperienceLevelAndStatus(ExperienceLevel level, Status status, Pageable pageable);
 
-    /** Flexible multi-field search, approved only. */
     @Query("""
         SELECT s FROM Submission s
         WHERE s.status = 'APPROVED'
-          AND (:company IS NULL OR LOWER(s.company) LIKE LOWER(CONCAT('%', :company, '%')))
-          AND (:role    IS NULL OR LOWER(s.role)    LIKE LOWER(CONCAT('%', :role,    '%')))
-          AND (:level   IS NULL OR s.experienceLevel = :level)
+          AND (:companyName IS NULL OR LOWER(s.companyName) LIKE LOWER(CONCAT('%', :companyName, '%')))
+          AND (:jobTitle    IS NULL OR LOWER(s.jobTitle)    LIKE LOWER(CONCAT('%', :jobTitle,    '%')))
+          AND (:level       IS NULL OR s.experienceLevel = :level)
         """)
     Page<Submission> search(
-            @Param("company") String company,
-            @Param("role")    String role,
-            @Param("level")   ExperienceLevel level,
+            @Param("companyName") String companyName,
+            @Param("jobTitle")    String jobTitle,
+            @Param("level")       ExperienceLevel level,
             Pageable pageable);
 
     long countByStatus(Status status);
