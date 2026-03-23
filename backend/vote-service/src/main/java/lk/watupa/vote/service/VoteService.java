@@ -3,70 +3,94 @@ package lk.watupa.vote.service;
 import lk.watupa.vote.enums.VoteType;
 import lk.watupa.vote.model.Vote;
 import lk.watupa.vote.payload.VoteResponse;
-import lk.watupa.vote.payload.VoteSummaryResponse;
+import lk.watupa.vote.repository.VoteCountRepository;
 import lk.watupa.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class VoteService {
 
-    private final VoteRepository voteRepository;
+    private static final String PERSISTENCE_ERROR = "Unable to persist vote due to a concurrent update";
 
-    @Value("${vote.approval.threshold:5}")
-    private int approvalThreshold;
+    private final VoteRepository voteRepository;
+    private final VoteCountRepository voteCountRepository;
 
     @Transactional
     public VoteResponse castVote(Long submissionId, Long userId, VoteType voteType) {
         log.info("User {} casting {} on submission {}", userId, voteType, submissionId);
 
-        int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
-        if (updatedRows == 0) {
+        Vote existingVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
+                .orElse(null);
+
+        int upvoteDelta = 0;
+        int downvoteDelta = 0;
+
+        if (existingVote == null) {
             try {
                 voteRepository.saveAndFlush(new Vote(submissionId, userId, voteType));
+                if (voteType == VoteType.UPVOTE) {
+                    upvoteDelta = 1;
+                } else {
+                    downvoteDelta = 1;
+                }
             } catch (DataIntegrityViolationException e) {
                 log.warn("Concurrent vote insert detected for submissionId={}, userId={}. Retrying as update.",
                         submissionId, userId, e);
-                int retryUpdatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
-                if (retryUpdatedRows == 0) {
-                    throw new RuntimeException("Unable to persist vote due to a concurrent update", e);
+
+                Vote concurrentVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
+                        .orElseThrow(() -> new RuntimeException(PERSISTENCE_ERROR, e));
+
+                if (concurrentVote.getVoteType() != voteType) {
+                    int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+                    if (updatedRows == 0) {
+                        throw new RuntimeException(PERSISTENCE_ERROR, e);
+                    }
+                    upvoteDelta = voteType == VoteType.UPVOTE ? 1 : -1;
+                    downvoteDelta = voteType == VoteType.DOWNVOTE ? 1 : -1;
                 }
+            }
+        } else if (existingVote.getVoteType() != voteType) {
+            VoteType previousVoteType = existingVote.getVoteType();
+            int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+            if (updatedRows == 0) {
+                throw new RuntimeException(PERSISTENCE_ERROR);
+            }
+
+            if (previousVoteType == VoteType.UPVOTE) {
+                upvoteDelta -= 1;
+            } else {
+                downvoteDelta -= 1;
+            }
+
+            if (voteType == VoteType.UPVOTE) {
+                upvoteDelta += 1;
+            } else {
+                downvoteDelta += 1;
             }
         }
 
-        Vote vote = voteRepository.findBySubmissionIdAndUserId(submissionId, userId)
+        applyCountDelta(submissionId, upvoteDelta, downvoteDelta);
+
+        Vote vote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
                 .orElseThrow(() -> new RuntimeException("Unable to load saved vote"));
         return mapToVoteResponse(vote);
     }
 
-    public List<VoteResponse> getVotesForSubmission(Long submissionId) {
-        log.info("Fetching votes for submission {}", submissionId);
-        List<Vote> votes = voteRepository.findBySubmissionId(submissionId);
-        return votes.stream()
-                .map(this::mapToVoteResponse)
-                .collect(Collectors.toList());
-    }
-
-    public VoteSummaryResponse calculateVoteScore(Long submissionId) {
-        log.info("Calculating vote score for submission {}", submissionId);
-        long upvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.UPVOTE);
-        long downvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.DOWNVOTE);
-        long netScore = upvotes - downvotes;
-        boolean approved = netScore >= approvalThreshold;
-
-        log.info("Submission {} - upvotes: {}, downvotes: {}, netScore: {}, approved: {}",
-                submissionId, upvotes, downvotes, netScore, approved);
-
-        return new VoteSummaryResponse(submissionId, upvotes, downvotes, netScore, approved);
+    private void applyCountDelta(Long submissionId, int upvoteDelta, int downvoteDelta) {
+        if (upvoteDelta == 0 && downvoteDelta == 0) {
+            return;
+        }
+        voteCountRepository.ensureSubmissionCountExists(submissionId);
+        int updatedRows = voteCountRepository.applyVoteDelta(submissionId, upvoteDelta, downvoteDelta);
+        if (updatedRows == 0) {
+            throw new RuntimeException("Unable to update vote count reference for submission " + submissionId);
+        }
     }
 
     private VoteResponse mapToVoteResponse(Vote vote) {

@@ -10,3 +10,20 @@ CREATE TABLE IF NOT EXISTS community.votes (
     CONSTRAINT uk_votes_submission_user UNIQUE (submission_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS community.vote_counts (
+    submission_id BIGINT    PRIMARY KEY,
+    upvote_count  BIGINT    NOT NULL DEFAULT 0,
+    downvote_count BIGINT   NOT NULL DEFAULT 0,
+    updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+MERGE INTO community.vote_counts (submission_id, upvote_count, downvote_count, updated_at)
+KEY(submission_id)
+SELECT
+    submission_id,
+    SUM(CASE WHEN vote_type = 'UPVOTE' THEN 1 ELSE 0 END) AS upvote_count,
+    SUM(CASE WHEN vote_type = 'DOWNVOTE' THEN 1 ELSE 0 END) AS downvote_count,
+    CURRENT_TIMESTAMP
+FROM community.votes
+GROUP BY submission_id;
+
