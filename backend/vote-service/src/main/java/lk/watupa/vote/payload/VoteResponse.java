@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 public class VoteResponse {
 
     private Long id;
-    private Long submissionId;
+    private UUID submissionId;
     private Long userId;
     private VoteType voteType;
     private LocalDateTime createdAt;

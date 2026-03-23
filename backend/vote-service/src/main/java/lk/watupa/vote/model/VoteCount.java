@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -17,7 +18,7 @@ public class VoteCount {
 
     @Id
     @Column(name = "submission_id", nullable = false)
-    private Long submissionId;
+    private UUID submissionId;
 
     @Column(name = "upvote_count", nullable = false)
     private long upvoteCount;
