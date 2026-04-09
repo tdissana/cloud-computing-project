@@ -6,16 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
- * Read-only entity mapped to the approved_salaries view/table in the salary schema.
- * The search-service is read-only — it never writes or modifies salary data.
+ * Read-only entity mapped to the unified salary.submission table.
+ * Search may return APPROVED (verified) or non-approved (unverified) rows; read-only.
  */
 @Entity
-@Table(name = "approved_salaries", schema = "salary")
+@Table(name = "submission", schema = "salary")
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,7 +22,7 @@ public class ApprovedSalary {
 
     @Id
     @Column(name = "id")
-    private UUID id;
+    private Long id;
 
     @Column(name = "company_name")
     private String companyName;
@@ -32,46 +30,33 @@ public class ApprovedSalary {
     @Column(name = "job_title")
     private String jobTitle;
 
-    @Column(name = "seniority_level")
-    private String seniorityLevel;
+    @Column(name = "experience_level")
+    private String experienceLevel;
 
-    @Column(name = "employment_type")
-    private String employmentType;
+    @Column(name = "seniority")
+    private Integer seniority;
 
     @Column(name = "country")
     private String country;
 
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "gross_monthly_salary")
-    private BigDecimal grossMonthlySalary;
-
     @Column(name = "currency")
     private String currency;
 
-    @Column(name = "additional_compensation")
-    private BigDecimal additionalCompensation;
+    @Column(name = "total_compensation")
+    private Double totalCompensation;
 
-    @Column(name = "years_of_experience")
-    private Integer yearsOfExperience;
+    @Column(name = "base_salary")
+    private Double baseSalary;
 
-    @Column(name = "years_at_company")
-    private Integer yearsAtCompany;
+    @Column(name = "skills", columnDefinition = "TEXT")
+    private String skills;
 
-    @Column(name = "tech_stack")
-    private String techStack;
+    @Column(name = "anonymize")
+    private Boolean anonymize;
 
-    /** When true, public-facing results hide company name and city. */
-    @Column(name = "anonymized")
-    private Boolean anonymized;
+    @Column(name = "status")
+    private String status;
 
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
-    @Column(name = "upvotes")
-    private Integer upvotes;
-
-    @Column(name = "downvotes")
-    private Integer downvotes;
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
 }

@@ -14,15 +14,15 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     @Query("""
         SELECT s FROM Submission s
         WHERE s.status = 'APPROVED'
-          AND (:role    IS NULL OR LOWER(s.role)    = LOWER(:role))
-          AND (:company IS NULL OR LOWER(s.company) = LOWER(:company))
-          AND (:level   IS NULL OR LOWER(s.level)   = LOWER(:level))
-          AND (:country IS NULL OR LOWER(s.country) = LOWER(:country))
+          AND (:jobTitle    IS NULL OR LOWER(s.jobTitle)         = LOWER(:jobTitle))
+          AND (:companyName IS NULL OR LOWER(s.companyName)      = LOWER(:companyName))
+          AND (:level       IS NULL OR LOWER(s.experienceLevel)  = LOWER(:level))
+          AND (:country     IS NULL OR LOWER(s.country)          = LOWER(:country))
     """)
     List<Submission> findApprovedByFilters(
-            @Param("role")    String role,
-            @Param("company") String company,
-            @Param("level")   String level,
-            @Param("country") String country
+            @Param("jobTitle")     String jobTitle,
+            @Param("companyName")  String companyName,
+            @Param("level")        String level,
+            @Param("country")      String country
     );
 }

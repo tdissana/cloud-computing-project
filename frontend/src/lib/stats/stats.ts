@@ -15,8 +15,8 @@ export async function fetchStats(
   try {
     const res = await fetch(`${BFF_BASE}/api/stats?${params.toString()}`);
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
-    const data: SalaryStatsResponse = await res.json();
-    return { success: true, data };
+    const json: { success: boolean; data: SalaryStatsResponse } = await res.json();
+    return { success: true, data: json.data };
   } catch (error) {
     return {
       success: false,

@@ -1,16 +1,18 @@
 export interface SalarySubmissionRequest {
-  company: string;
-  role: string;
+  companyName: string;
+  jobTitle: string;
   experienceLevel: string;
+  seniority: number | null;
   country: string;
-  baseSalary: number;
-  totalCompensation: number;
   currency: string;
+  totalCompensation: number;
+  baseSalary: number;
+  skills: string;
   anonymize: boolean;
 }
 
 export interface SalarySubmissionResponse {
   message: string;
-  submissionId: string;
+  submissionId: number;
   status: "PENDING";
 }
