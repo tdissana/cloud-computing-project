@@ -25,15 +25,25 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
                 {salary.jobTitle}
               </h3>
             </div>
-            {salary.anonymized && (
-              <Badge
-                variant="outline"
-                className="bg-[#a5c8fe]/10 text-[#a5c8fe] border-[#a5c8fe]/25 whitespace-nowrap flex items-center gap-1"
-              >
-                <Lock className="w-3 h-3" />
-                <span className="text-xs">Anonymized</span>
-              </Badge>
-            )}
+            <div className="flex flex-col gap-1 items-end">
+              {salary.status && salary.status !== "APPROVED" && (
+                <Badge
+                  variant="outline"
+                  className="bg-red-500/20 text-red-400 border-red-500/40 whitespace-nowrap flex items-center gap-1"
+                >
+                  <span className="text-xs font-semibold">Unverified</span>
+                </Badge>
+              )}
+              {salary.anonymized && (
+                <Badge
+                  variant="outline"
+                  className="bg-[#a5c8fe]/10 text-[#a5c8fe] border-[#a5c8fe]/25 whitespace-nowrap flex items-center gap-1"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span className="text-xs">Anonymized</span>
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
