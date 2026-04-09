@@ -1,124 +1,72 @@
 package lk.watupa.vote.service;
 
-import lk.watupa.vote.enums.Status;
 import lk.watupa.vote.enums.VoteType;
 import lk.watupa.vote.model.Vote;
-import lk.watupa.vote.model.VoteCount;
 import lk.watupa.vote.payload.VoteResponse;
-import lk.watupa.vote.repository.SubmissionRepository;
-import lk.watupa.vote.repository.VoteCountRepository;
+import lk.watupa.vote.payload.VoteSummaryResponse;
 import lk.watupa.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class VoteService {
 
-    private static final String PERSISTENCE_ERROR = "Unable to persist vote due to a concurrent update";
-
     private final VoteRepository voteRepository;
-    private final VoteCountRepository voteCountRepository;
-    private final SubmissionRepository submissionRepository;
 
-    @Value("${vote.approval.threshold:10}")
-    private int voteApprovalThreshold;
+    @Value("${vote.approval.threshold:5}")
+    private int approvalThreshold;
 
     @Transactional
-    public VoteResponse castVote(UUID submissionId, Long userId, VoteType voteType) {
+    public VoteResponse castVote(Long submissionId, Long userId, VoteType voteType) {
         log.info("User {} casting {} on submission {}", userId, voteType, submissionId);
 
-        Vote existingVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
-                .orElse(null);
-
-        int upvoteDelta = 0;
-        int downvoteDelta = 0;
-
-        if (existingVote == null) {
+        int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+        if (updatedRows == 0) {
             try {
                 voteRepository.saveAndFlush(new Vote(submissionId, userId, voteType));
-                if (voteType == VoteType.UPVOTE) {
-                    upvoteDelta = 1;
-                } else {
-                    downvoteDelta = 1;
-                }
             } catch (DataIntegrityViolationException e) {
                 log.warn("Concurrent vote insert detected for submissionId={}, userId={}. Retrying as update.",
                         submissionId, userId, e);
-
-                Vote concurrentVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
-                        .orElseThrow(() -> new RuntimeException(PERSISTENCE_ERROR, e));
-
-                if (concurrentVote.getVoteType() != voteType) {
-                    int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
-                    if (updatedRows == 0) {
-                        throw new RuntimeException(PERSISTENCE_ERROR, e);
-                    }
-                    upvoteDelta = voteType == VoteType.UPVOTE ? 1 : -1;
-                    downvoteDelta = voteType == VoteType.DOWNVOTE ? 1 : -1;
+                int retryUpdatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
+                if (retryUpdatedRows == 0) {
+                    throw new RuntimeException("Unable to persist vote due to a concurrent update", e);
                 }
-            }
-        } else if (existingVote.getVoteType() != voteType) {
-            VoteType previousVoteType = existingVote.getVoteType();
-            int updatedRows = voteRepository.updateVoteType(submissionId, userId, voteType);
-            if (updatedRows == 0) {
-                throw new RuntimeException(PERSISTENCE_ERROR);
-            }
-
-            if (previousVoteType == VoteType.UPVOTE) {
-                upvoteDelta -= 1;
-            } else {
-                downvoteDelta -= 1;
-            }
-
-            if (voteType == VoteType.UPVOTE) {
-                upvoteDelta += 1;
-            } else {
-                downvoteDelta += 1;
             }
         }
 
-        applyCountDelta(submissionId, upvoteDelta, downvoteDelta);
-        updateSubmissionStatusIfThresholdReached(submissionId);
-
-        Vote vote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
+        Vote vote = voteRepository.findBySubmissionIdAndUserId(submissionId, userId)
                 .orElseThrow(() -> new RuntimeException("Unable to load saved vote"));
         return mapToVoteResponse(vote);
     }
 
-    private void applyCountDelta(UUID submissionId, int upvoteDelta, int downvoteDelta) {
-        if (upvoteDelta == 0 && downvoteDelta == 0) {
-            return;
-        }
-        voteCountRepository.ensureSubmissionCountExists(submissionId);
-        int updatedRows = voteCountRepository.applyVoteDelta(submissionId, upvoteDelta, downvoteDelta);
-        if (updatedRows == 0) {
-            throw new RuntimeException("Unable to update vote count reference for submission " + submissionId);
-        }
+    public List<VoteResponse> getVotesForSubmission(Long submissionId) {
+        log.info("Fetching votes for submission {}", submissionId);
+        List<Vote> votes = voteRepository.findBySubmissionId(submissionId);
+        return votes.stream()
+                .map(this::mapToVoteResponse)
+                .collect(Collectors.toList());
     }
 
-    private void updateSubmissionStatusIfThresholdReached(UUID submissionId) {
-        VoteCount voteCount = voteCountRepository.findById(submissionId).orElse(null);
-        if (voteCount == null) {
-            return;
-        }
+    public VoteSummaryResponse calculateVoteScore(Long submissionId) {
+        log.info("Calculating vote score for submission {}", submissionId);
+        long upvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.UPVOTE);
+        long downvotes = voteRepository.countBySubmissionIdAndVoteType(submissionId, VoteType.DOWNVOTE);
+        long netScore = upvotes - downvotes;
+        boolean approved = netScore >= approvalThreshold;
 
-        long totalVotes = voteCount.getUpvoteCount() + voteCount.getDownvoteCount();
-        if (totalVotes < voteApprovalThreshold) {
-            return;
-        }
+        log.info("Submission {} - upvotes: {}, downvotes: {}, netScore: {}, approved: {}",
+                submissionId, upvotes, downvotes, netScore, approved);
 
-        int updatedRows = submissionRepository.updateStatusToApproved(submissionId, Status.APPROVED);
-        if (updatedRows > 0) {
-            log.info("Submission {} marked as APPROVED after reaching {} votes", submissionId, totalVotes);
-        }
+        return new VoteSummaryResponse(submissionId, upvotes, downvotes, netScore, approved);
     }
 
     private VoteResponse mapToVoteResponse(Vote vote) {
