@@ -1,15 +1,19 @@
 export interface StatsFilters {
-  role?: string;
+  jobTitle?: string;
   company?: string;
-  level?: string;
+  seniorityLevel?: string;
   country?: string;
+  employmentType?: string;
+  currency?: string;
 }
 
 export interface SalaryStatsResponse {
-  role: string | null;
+  jobTitle: string | null;
   company: string | null;
-  level: string | null;
+  seniorityLevel: string | null;
   country: string | null;
+  employmentType: string | null;
+  currency: string | null;
   count: number;
   average: number;
   median: number;

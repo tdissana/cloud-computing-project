@@ -1,35 +1,15 @@
+import { getActiveFilters as _getActiveFilters, formatSalary as _formatSalary } from "@/lib/common/helpers";
 import { SalarySearchFilters } from "@/types/search";
 
-/**
- * Format salary values in LKR currency
- */
-export function formatSalary(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "LKR",
-    maximumFractionDigits: 0,
-    notation: "compact",
-  }).format(value);
-}
+// Re-export common helpers for backward compatibility
+export const formatSalary = (value: number) => _formatSalary(value);
 
-/**
- * Format number with commas
- */
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
-/**
- * Get active/non-empty filters from the filter object
- */
-export function getActiveFilters(filters: SalarySearchFilters) {
-  return Object.entries(filters).filter(([, v]) => {
-    if (v === undefined || v === null) return false;
-    if (typeof v === "string" && v.trim() === "") return false;
-    if (typeof v === "number" && (v < 0)) return false;
-    return true;
-  }) as [keyof SalarySearchFilters, string | number][];
-}
+export const getActiveFilters = (filters: SalarySearchFilters) =>
+  _getActiveFilters(filters);
 
 /**
  * Convert filter display value to readable label

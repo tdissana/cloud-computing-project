@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Search, TrendingUp, Users, BarChart2, Award, X } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Search, TrendingUp, Users, BarChart2, Award, X, Filter } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,12 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 import { fetchStats } from "@/lib/stats/stats";
-import { LEVELS, COUNTRIES } from "@/lib/stats/constants";
-import { fmt, activeFilters } from "@/lib/stats/helpers";
+import { SENIORITY_LEVELS, EMPLOYMENT_TYPES } from "@/lib/common/constants";
+import { getActiveFilters, formatSalary } from "@/lib/common/helpers";
+import { fetchFilterOptions } from "@/lib/search/search";
 import { StatCard } from "@/components/stats/StatCard";
 import { SalaryStatsResponse, StatsFilters } from "@/types/stats";
+import { FilterOptionsResponse } from "@/types/search";
 
 /* ─── Main Page ──────────────────────────────────────────────────── */
 
@@ -38,6 +41,32 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<FilterOptionsResponse | null>(null);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+
+  // Fetch filter options on mount
+  useEffect(() => {
+    const loadOptions = async () => {
+      const result = await fetchFilterOptions();
+      if (result.success && result.data) {
+        setFilterOptions(result.data);
+      }
+      setLoadingOptions(false);
+    };
+    loadOptions();
+  }, []);
+
+  // Re-fetch filter options when tab regains focus
+  useEffect(() => {
+    const onFocus = async () => {
+      const result = await fetchFilterOptions();
+      if (result.success && result.data) {
+        setFilterOptions(result.data);
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   const handleSearch = useCallback(async () => {
     setLoading(true);
@@ -78,7 +107,7 @@ export default function StatsPage() {
       ]
     : [];
 
-  const active = activeFilters(draft);
+  const active = getActiveFilters(draft);
 
   return (
     <>
@@ -141,38 +170,42 @@ export default function StatsPage() {
             </h1>
             <p className="text-[#4a5572] max-w-xl" style={{ fontSize: "14px", lineHeight: 1.75, fontWeight: 300 }}>
               Community-sourced, anonymised salary data for Sri Lanka&apos;s tech
-              industry. Filter by role, company, level or country to see
-              aggregated insights.
+              industry. Filter by job title, company, seniority level, country,
+              employment type or currency to see aggregated insights.
             </p>
           </div>
 
           {/* ── Filter Bar ── */}
-          <Card className="bg-white/[0.025] border-white/[0.07] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+          <Card className="bg-white/[0.025] border-white/[0.07] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)] overflow-visible">
             <CardHeader className="pb-4">
               <CardTitle
                 className="text-base font-bold text-[#e8edf5] flex items-center gap-2 uppercase tracking-widest"
                 style={{ fontSize: "11px", letterSpacing: "0.18em" }}
               >
-                <Search className="w-4 h-4 text-[#6ea8fe]" />
+                <Filter className="w-4 h-4 text-[#6ea8fe]" />
                 Filter Salaries
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <CardContent className="space-y-4 overflow-visible pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
-                {/* Role */}
+                {/* Job Title */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
-                    Role
+                    Job Title
                   </label>
-                  <Input
-                    placeholder="e.g. Software Engineer"
-                    value={draft.role ?? ""}
-                    onChange={(e) =>
-                      setDraft((p) => ({ ...p, role: e.target.value || undefined }))
-                    }
-                    className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] placeholder:text-[#3a4560] focus-visible:ring-[#6ea8fe] focus-visible:border-[#6ea8fe]/50"
-                  />
+                  {!loadingOptions && filterOptions ? (
+                    <SearchableSelect
+                      value={draft.jobTitle ?? ""}
+                      onChange={(value: string) =>
+                        setDraft((p) => ({ ...p, jobTitle: value || undefined }))
+                      }
+                      options={filterOptions.jobTitles || []}
+                      placeholder="Search or type job title..."
+                    />
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
                 </div>
 
                 {/* Company */}
@@ -180,25 +213,58 @@ export default function StatsPage() {
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
                     Company
                   </label>
-                  <Input
-                    placeholder="e.g. WSO2"
-                    value={draft.company ?? ""}
-                    onChange={(e) =>
-                      setDraft((p) => ({ ...p, company: e.target.value || undefined }))
-                    }
-                    className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] placeholder:text-[#3a4560] focus-visible:ring-[#6ea8fe] focus-visible:border-[#6ea8fe]/50"
-                  />
+                  {!loadingOptions && filterOptions ? (
+                    <Select
+                      value={draft.company ?? ""}
+                      onValueChange={(v) =>
+                        setDraft((p) => ({ ...p, company: v || undefined }))
+                      }
+                    >
+                      <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
+                        <SelectValue placeholder="Any company" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0f1524] border-white/[0.08]">
+                        <SelectItem value="" className="text-[#3a4560]">Any company</SelectItem>
+                        {filterOptions.companies.map((c) => (
+                          <SelectItem key={c} value={c} className="text-[#e8edf5] focus:bg-white/[0.05]">
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
                 </div>
 
-                {/* Level */}
+                {/* Country */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
-                    Level
+                    Country
+                  </label>
+                  {!loadingOptions && filterOptions ? (
+                    <SearchableSelect
+                      value={draft.country ?? ""}
+                      onChange={(value: string) =>
+                        setDraft((p) => ({ ...p, country: value || undefined }))
+                      }
+                      options={filterOptions.countries || []}
+                      placeholder="Search or type country..."
+                    />
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
+                </div>
+
+                {/* Seniority Level */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
+                    Seniority Level
                   </label>
                   <Select
-                    value={draft.level ?? ""}
+                    value={draft.seniorityLevel ?? ""}
                     onValueChange={(v) =>
-                      setDraft((p) => ({ ...p, level: v || undefined }))
+                      setDraft((p) => ({ ...p, seniorityLevel: v || undefined }))
                     }
                   >
                     <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
@@ -206,7 +272,7 @@ export default function StatsPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-[#0f1524] border-white/[0.08]">
                       <SelectItem value="" className="text-[#3a4560]">Any level</SelectItem>
-                      {LEVELS.map((l) => (
+                      {SENIORITY_LEVELS.map((l) => (
                         <SelectItem key={l} value={l} className="text-[#e8edf5] focus:bg-white/[0.05]">
                           {l}
                         </SelectItem>
@@ -215,29 +281,48 @@ export default function StatsPage() {
                   </Select>
                 </div>
 
-                {/* Country */}
+                {/* Employment Type */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
-                    Country
+                    Employment Type
                   </label>
                   <Select
-                    value={draft.country ?? ""}
+                    value={draft.employmentType ?? ""}
                     onValueChange={(v) =>
-                      setDraft((p) => ({ ...p, country: v || undefined }))
+                      setDraft((p) => ({ ...p, employmentType: v || undefined }))
                     }
                   >
                     <SelectTrigger className="bg-[#0f1524] border-white/[0.08] text-[#e8edf5] focus:ring-[#6ea8fe]">
-                      <SelectValue placeholder="Any country" />
+                      <SelectValue placeholder="Any type" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#0f1524] border-white/[0.08]">
-                      <SelectItem value="" className="text-[#3a4560]">Any country</SelectItem>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem key={c} value={c} className="text-[#e8edf5] focus:bg-white/[0.05]">
-                          {c}
+                      <SelectItem value="" className="text-[#3a4560]">Any type</SelectItem>
+                      {EMPLOYMENT_TYPES.map((t) => (
+                        <SelectItem key={t} value={t} className="text-[#e8edf5] focus:bg-white/[0.05]">
+                          {t}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Currency */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#4a5572] uppercase tracking-wider">
+                    Currency
+                  </label>
+                  {!loadingOptions && filterOptions ? (
+                    <SearchableSelect
+                      value={draft.currency ?? ""}
+                      onChange={(value: string) =>
+                        setDraft((p) => ({ ...p, currency: value || undefined }))
+                      }
+                      options={filterOptions.currencies || []}
+                      placeholder="Search or type currency..."
+                    />
+                  ) : (
+                    <Input disabled placeholder="Loading..." />
+                  )}
                 </div>
               </div>
 
@@ -309,11 +394,13 @@ export default function StatsPage() {
               {/* Context banner */}
               <div className="flex flex-wrap items-center gap-2 text-sm text-[#4a5572]">
                 <span>Showing results for</span>
-                {filters.role    && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.role}</Badge>}
-                {filters.company && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.company}</Badge>}
-                {filters.level   && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.level}</Badge>}
-                {filters.country && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.country}</Badge>}
-                {!filters.role && !filters.company && !filters.level && !filters.country && (
+                {filters.jobTitle       && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.jobTitle}</Badge>}
+                {filters.company        && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.company}</Badge>}
+                {filters.seniorityLevel && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.seniorityLevel}</Badge>}
+                {filters.country        && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.country}</Badge>}
+                {filters.employmentType && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.employmentType}</Badge>}
+                {filters.currency       && <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">{filters.currency}</Badge>}
+                {!filters.jobTitle && !filters.company && !filters.seniorityLevel && !filters.country && !filters.employmentType && !filters.currency && (
                   <Badge className="bg-white/[0.05] text-[#e8edf5] border-white/[0.08]">All Submissions</Badge>
                 )}
               </div>
@@ -329,19 +416,19 @@ export default function StatsPage() {
                 <StatCard
                   icon={<TrendingUp className="w-4 h-4" />}
                   label="Average"
-                  value={fmt(stats.average)}
+                  value={formatSalary(stats.average)}
                   accent="text-[#6ea8fe]"
                 />
                 <StatCard
                   icon={<BarChart2 className="w-4 h-4" />}
                   label="Median"
-                  value={fmt(stats.median)}
+                  value={formatSalary(stats.median)}
                   accent="text-[#a5c8fe]"
                 />
                 <StatCard
                   icon={<Award className="w-4 h-4" />}
                   label="90th Percentile"
-                  value={fmt(stats.p90)}
+                  value={formatSalary(stats.p90)}
                   accent="text-[#5b5bd6]"
                 />
               </div>

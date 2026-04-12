@@ -24,20 +24,25 @@ public class StatsController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<StatsPayload.StatsResponse>> getStats(
-            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String jobTitle,
             @RequestParam(required = false) String company,
-            @RequestParam(required = false) String level,
-            @RequestParam(required = false) String country
+            @RequestParam(required = false) String seniorityLevel,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String employmentType,
+            @RequestParam(required = false) String currency
     ) {
-        log.info("Stats request — role={}, company={}, level={}, country={}", role, company, level, country);
+        log.info("Stats request — jobTitle={}, company={}, seniorityLevel={}, country={}, employmentType={}, currency={}",
+                jobTitle, company, seniorityLevel, country, employmentType, currency);
 
         StringBuilder targetUrl = new StringBuilder(serviceProperties.getStats().getUrl() + "/api/stats");
 
         List<String> params = new ArrayList<>();
-        if (role    != null) params.add("role="    + role);
-        if (company != null) params.add("company=" + company);
-        if (level   != null) params.add("level="   + level);
-        if (country != null) params.add("country=" + country);
+        if (jobTitle       != null) params.add("jobTitle="       + jobTitle);
+        if (company        != null) params.add("company="        + company);
+        if (seniorityLevel != null) params.add("seniorityLevel=" + seniorityLevel);
+        if (country        != null) params.add("country="        + country);
+        if (employmentType != null) params.add("employmentType=" + employmentType);
+        if (currency       != null) params.add("currency="       + currency);
         if (!params.isEmpty()) targetUrl.append("?").append(String.join("&", params));
 
         ResponseEntity<StatsPayload.StatsResponse> downstream = proxyService.forward(

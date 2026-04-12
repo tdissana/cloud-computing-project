@@ -1,11 +1,2 @@
-export const LEVELS = ["Junior", "Mid", "Senior", "Lead", "Principal", "Manager"];
-
-export const COUNTRIES = [
-  "Sri Lanka",
-  "India",
-  "United States",
-  "United Kingdom",
-  "Australia",
-  "Singapore",
-  "Germany",
-];
+// Re-export shared constants from common
+export { SENIORITY_LEVELS as LEVELS, COUNTRIES } from "@/lib/common/constants";

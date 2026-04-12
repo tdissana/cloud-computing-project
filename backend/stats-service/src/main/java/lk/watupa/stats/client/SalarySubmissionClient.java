@@ -29,7 +29,7 @@ public class SalarySubmissionClient {
     }
 
     public List<SubmissionDto> getApprovedSubmissions(
-            String jobTitle, String company, String level, String country) {
+            String jobTitle, String company, String level, String country, String employmentType, String currency) {
 
         List<SubmissionDto> all = new ArrayList<>();
         int page = 0;
@@ -43,6 +43,8 @@ public class SalarySubmissionClient {
             if (company != null) body.put("company", company);
             if (level != null) body.put("experienceLevel", level);
             if (country != null) body.put("country", country);
+            if (employmentType != null) body.put("employmentType", employmentType);
+            if (currency != null) body.put("currency", currency);
 
             log.debug("Fetching approved submissions page={}", page);
 

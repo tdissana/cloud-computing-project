@@ -1,17 +1,8 @@
+import { formatSalary, getActiveFilters } from "@/lib/common/helpers";
 import { StatsFilters } from "@/types/stats";
 
-export function fmt(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "LKR",
-    maximumFractionDigits: 0,
-    notation: "compact",
-  }).format(value);
-}
+// Re-export common helpers with stats-specific names for backward compatibility
+export const fmt = (value: number) => formatSalary(value);
 
-export function activeFilters(filters: StatsFilters) {
-  return Object.entries(filters).filter(([, v]) => v && v.trim() !== "") as [
-    keyof StatsFilters,
-    string,
-  ][];
-}
+export const activeFilters = (filters: StatsFilters) =>
+  getActiveFilters(filters);

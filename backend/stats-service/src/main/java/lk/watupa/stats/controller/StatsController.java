@@ -15,12 +15,14 @@ public class StatsController {
 
     @GetMapping
     public ResponseEntity<SalaryStatsResponse> getStats(
-            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String jobTitle,
             @RequestParam(required = false) String company,
-            @RequestParam(required = false) String level,
-            @RequestParam(required = false) String country
+            @RequestParam(required = false) String seniorityLevel,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String employmentType,
+            @RequestParam(required = false) String currency
     ) {
-        SalaryStatsResponse response = statsService.getStats(role, company, level, country);
+        SalaryStatsResponse response = statsService.getStats(jobTitle, company, seniorityLevel, country, employmentType, currency);
         return ResponseEntity.ok(response);
     }
 }

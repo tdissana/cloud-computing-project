@@ -14,18 +14,20 @@ public class StatsService {
 
     private final SalarySubmissionClient salarySubmissionClient;
 
-    public SalaryStatsResponse getStats(String role, String company, String level, String country) {
+    public SalaryStatsResponse getStats(String jobTitle, String company, String seniorityLevel, String country, String employmentType, String currency) {
 
         List<SubmissionDto> submissions = salarySubmissionClient.getApprovedSubmissions(
-                role, company, level, country
+                jobTitle, company, seniorityLevel, country, employmentType, currency
         );
 
         if (submissions.isEmpty()) {
             return SalaryStatsResponse.builder()
-                    .role(role)
+                    .jobTitle(jobTitle)
                     .company(company)
-                    .level(level)
+                    .seniorityLevel(seniorityLevel)
                     .country(country)
+                    .employmentType(employmentType)
+                    .currency(currency)
                     .count(0)
                     .average(0.0)
                     .median(0.0)
@@ -39,10 +41,12 @@ public class StatsService {
                 .toList();
 
         return SalaryStatsResponse.builder()
-                .role(role)
+                .jobTitle(jobTitle)
                 .company(company)
-                .level(level)
+                .seniorityLevel(seniorityLevel)
                 .country(country)
+                .employmentType(employmentType)
+                .currency(currency)
                 .count(salaries.size())
                 .average(computeAverage(salaries))
                 .median(computePercentile(salaries, 50))
