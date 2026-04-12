@@ -1,0 +1,33 @@
+version: '3.8'
+
+# ---------------------------------------------------------------------------
+# Development database only — the Spring Boot apps run locally and connect
+# to this container via localhost:5432.
+# Usage: see DOCKER.md
+# ---------------------------------------------------------------------------
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres_dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB}
+      POSTGRES_USER:     ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
