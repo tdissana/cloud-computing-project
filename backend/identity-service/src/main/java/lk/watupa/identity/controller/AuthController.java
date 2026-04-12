@@ -45,8 +45,7 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<?> validate(
-            @RequestHeader(value = "Authorization", required = false) String authorization) {
+    public ResponseEntity<?> validate(@RequestHeader(value = "Authorization") String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Missing or invalid Authorization header"));
