@@ -22,6 +22,8 @@ public class SalarySearchRequest {
     @JsonAlias("seniorityLevel")
     private String experienceLevel;
 
+    private String employmentType;
+
     private String currency;
 
     @Min(0)

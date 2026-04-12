@@ -143,7 +143,9 @@ export default function AuthPage() {
       const res = await apiLogin(loginForm);
       localStorage.setItem("auth_token", res.token);
       setLoginMsg({ type: "success", text: "Welcome back! Redirecting…" });
-      setTimeout(() => router.push("/"), 1200);
+      const redirectPath = sessionStorage.getItem("redirect_after_login");
+      sessionStorage.removeItem("redirect_after_login");
+      setTimeout(() => router.push(redirectPath || "/"), 1200);
     } catch (e) {
       setLoginMsg({ type: "error", text: (e as Error).message });
     } finally {

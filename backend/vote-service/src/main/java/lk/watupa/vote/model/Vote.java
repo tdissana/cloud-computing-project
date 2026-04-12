@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Data
@@ -25,7 +24,7 @@ public class Vote {
     private Long id;
 
     @Column(name = "submission_id", nullable = false)
-    private UUID submissionId;
+    private Long submissionId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -42,7 +41,7 @@ public class Vote {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Vote(UUID submissionId, Long userId, VoteType voteType) {
+    public Vote(Long submissionId, Long userId, VoteType voteType) {
         this.submissionId = submissionId;
         this.userId = userId;
         this.voteType = voteType;

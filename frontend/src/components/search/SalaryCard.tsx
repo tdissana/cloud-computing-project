@@ -6,7 +6,7 @@ import { MapPin, Code, Lock, ThumbsUp, ThumbsDown } from "lucide-react";
 
 interface SalaryCardProps {
   salary: SalaryResultResponse;
-  onVote: (submissionId: string, voteType: "UP" | "DOWN") => void;
+  onVote: (submissionId: string, voteType: "UPVOTE" | "DOWNVOTE") => void;
   voting?: boolean;
 }
 
@@ -115,7 +115,7 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
           <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
-              onClick={() => onVote(salary.id, "UP")}
+              onClick={() => onVote(salary.id, "UPVOTE")}
               disabled={voting}
               className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#a5c8fe] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -125,7 +125,7 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
             </button>
             <button
               type="button"
-              onClick={() => onVote(salary.id, "DOWN")}
+              onClick={() => onVote(salary.id, "DOWNVOTE")}
               disabled={voting}
               className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#f2a5a5] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >

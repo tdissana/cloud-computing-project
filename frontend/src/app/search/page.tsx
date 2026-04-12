@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { SearchPageContent } from "@/components/search/SearchPageContent";
 
-export default function SearchIndexPage() {
-  redirect("/search/verified");
+export default function SearchPage() {
+  return <SearchPageContent />;
 }

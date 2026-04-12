@@ -1,19 +1,11 @@
 package lk.watupa.search.service;
 
-import lk.watupa.search.model.ApprovedSalary;
-import lk.watupa.search.model.VoteResult;
+import lk.watupa.search.client.SalarySubmissionClient;
+import lk.watupa.search.client.VoteClient;
 import lk.watupa.search.payload.*;
-import lk.watupa.search.repository.SalarySearchRepository;
-import lk.watupa.search.repository.SalarySpecification;
-import lk.watupa.search.repository.VoteResultRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -24,11 +16,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class SearchService {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int MAX_PAGE_SIZE = 100;
     private static final List<String> EMPLOYMENT_TYPES = List.of(
             "Full-time", "Part-time", "Contract", "Freelance"
     );
@@ -36,94 +25,92 @@ public class SearchService {
     private static final DateTimeFormatter APPROVED_AT_FMT =
             DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
-    private final SalarySearchRepository repository;
-    private final VoteResultRepository voteResultRepository;
+    private final SalarySubmissionClient salarySubmissionClient;
+    private final VoteClient voteClient;
 
     public PagedResponse<SalaryResultResponse> search(SalarySearchRequest request) {
-        Pageable pageable = buildPageable(request);
-        Page<ApprovedSalary> page = repository.findAll(
-                SalarySpecification.fromRequest(request), pageable);
+        OwnerPagedDto<SubmissionDto> pagedResult = salarySubmissionClient.search(request);
 
-        List<ApprovedSalary> rows = page.getContent();
+        List<SubmissionDto> rows = pagedResult.content();
         List<String> idStrings = rows.stream()
-                .map(s -> String.valueOf(s.getId()))
+                .map(s -> String.valueOf(s.id()))
                 .toList();
 
-        Map<String, VoteResult> votesById = voteResultRepository.findByIdIn(idStrings).stream()
-                .collect(Collectors.toMap(VoteResult::getId, v -> v, (a, b) -> a));
+        Map<String, VoteCountDto> votesById = voteClient.getVoteCounts(idStrings).stream()
+                .collect(Collectors.toMap(VoteCountDto::submissionId, v -> v, (a, b) -> a));
 
         List<SalaryResultResponse> dtos = rows.stream()
-                .map(s -> toDto(s, votesById.get(String.valueOf(s.getId()))))
+                .map(s -> toDto(s, votesById.get(String.valueOf(s.id()))))
                 .toList();
 
-        // Apply in-memory sorting for vote-based sorts
         List<SalaryResultResponse> sortedDtos = sortResults(dtos, request);
 
         log.info("Search returned {} results (page {}/{}) verificationStatus={}",
-                sortedDtos.size(), page.getNumber(), page.getTotalPages(),
+                sortedDtos.size(), pagedResult.page(), pagedResult.totalPages(),
                 request.getVerificationStatus());
 
         return PagedResponse.<SalaryResultResponse>builder()
                 .content(sortedDtos)
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
+                .page(pagedResult.page())
+                .size(pagedResult.size())
+                .totalElements(pagedResult.totalElements())
+                .totalPages(pagedResult.totalPages())
+                .last(pagedResult.last())
                 .build();
     }
 
     public FilterOptionsResponse getFilterOptions() {
+        OwnerFilterOptionsDto opts = salarySubmissionClient.getFilterOptions();
         return FilterOptionsResponse.builder()
-                .countries(repository.findDistinctCountries())
-                .companies(repository.findDistinctCompanies())
-                .jobTitles(repository.findDistinctJobTitles())
-                .seniorityLevels(repository.findDistinctExperienceLevels())
+                .countries(opts.countries())
+                .companies(opts.companies())
+                .jobTitles(opts.jobTitles())
+                .seniorityLevels(opts.experienceLevels())
                 .employmentTypes(EMPLOYMENT_TYPES)
-                .currencies(repository.findDistinctCurrencies())
+                .currencies(opts.currencies())
                 .build();
     }
 
-    private SalaryResultResponse toDto(ApprovedSalary s, VoteResult vote) {
-        boolean anon = Boolean.TRUE.equals(s.getAnonymize());
-        int up = vote != null ? vote.getUpVoteCount() : 0;
-        int down = vote != null ? vote.getDownVoteCount() : 0;
+    private SalaryResultResponse toDto(SubmissionDto s, VoteCountDto vote) {
+        boolean anon = Boolean.TRUE.equals(s.anonymize());
+        int up = vote != null ? vote.upvoteCount() : 0;
+        int down = vote != null ? vote.downvoteCount() : 0;
 
-        Double gross = s.getBaseSalary();
+        Double gross = s.baseSalary();
         Double additional = null;
-        if (s.getTotalCompensation() != null && s.getBaseSalary() != null) {
-            double diff = s.getTotalCompensation() - s.getBaseSalary();
+        if (s.totalCompensation() != null && s.baseSalary() != null) {
+            double diff = s.totalCompensation() - s.baseSalary();
             if (diff > 0) {
                 additional = diff;
             }
         }
 
-        String approvedAt = s.getTimestamp() == null
+        String approvedAt = s.timestamp() == null
                 ? null
-                : APPROVED_AT_FMT.format(s.getTimestamp().atOffset(ZoneOffset.UTC));
+                : APPROVED_AT_FMT.format(s.timestamp().atOffset(ZoneOffset.UTC));
 
-        String level = s.getExperienceLevel() == null
+        String level = s.experienceLevel() == null
                 ? ""
-                : titleCaseWord(s.getExperienceLevel());
+                : titleCaseWord(s.experienceLevel());
 
         return SalaryResultResponse.builder()
-                .id(String.valueOf(s.getId()))
-                .companyName(anon ? "Anonymous" : s.getCompanyName())
-                .jobTitle(s.getJobTitle())
+                .id(String.valueOf(s.id()))
+                .companyName(anon ? "Anonymous" : s.companyName())
+                .jobTitle(s.jobTitle())
                 .seniorityLevel(level)
-                .employmentType("Full-time")
-                .country(s.getCountry())
+                .employmentType(s.employmentType() != null ? formatEmploymentType(s.employmentType()) : "Full-time")
+                .country(s.country())
                 .city(anon ? null : null)
                 .grossMonthlySalary(gross)
-                .currency(s.getCurrency())
+                .currency(s.currency())
                 .additionalCompensation(additional)
-                .yearsOfExperience(s.getSeniority())
-                .techStack(s.getSkills() != null ? s.getSkills() : "")
+                .yearsOfExperience(s.seniority())
+                .techStack(s.skills() != null ? s.skills() : "")
                 .anonymized(anon)
                 .approvedAt(approvedAt != null ? approvedAt : "")
                 .upvotes(up)
                 .downvotes(down)
-                .status(s.getStatus())
+                .status(s.status())
                 .build();
     }
 
@@ -134,19 +121,13 @@ public class SearchService {
         return Character.toUpperCase(raw.charAt(0)) + raw.substring(1).toLowerCase();
     }
 
-    private Pageable buildPageable(SalarySearchRequest req) {
-        int page = (req.getPage() != null && req.getPage() >= 0) ? req.getPage() : 0;
-        int size = (req.getSize() != null && req.getSize() > 0)
-                ? Math.min(req.getSize(), MAX_PAGE_SIZE)
-                : DEFAULT_PAGE_SIZE;
-
-        String sortField = mapSortToEntityProperty(req.getSortBy());
-
-        Sort.Direction dir = "asc".equalsIgnoreCase(req.getSortDir())
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
-
-        return PageRequest.of(page, size, Sort.by(dir, sortField));
+    private static String formatEmploymentType(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        return switch (raw) {
+            case "FullTime" -> "Full-time";
+            case "PartTime" -> "Part-time";
+            default -> raw;
+        };
     }
 
     private List<SalaryResultResponse> sortResults(List<SalaryResultResponse> dtos, SalarySearchRequest request) {
@@ -163,28 +144,10 @@ public class SearchService {
                     int compare = switch (sortField) {
                         case "upvotes" -> Integer.compare(a.getUpvotes(), b.getUpvotes());
                         case "downvotes" -> Integer.compare(a.getDownvotes(), b.getDownvotes());
-                        default -> 0;  // No in-memory sort for DB fields
+                        default -> 0;
                     };
                     return ascending ? compare : -compare;
                 })
                 .toList();
-    }
-
-    private String mapSortToEntityProperty(String sortBy) {
-        if (sortBy == null) {
-            return "timestamp";
-        }
-        String s = sortBy.toLowerCase();
-        return switch (s) {
-            case "approvedat" -> "timestamp";
-            case "grossmonthlysalary" -> "baseSalary";
-            case "yearsofexperience" -> "seniority";
-            case "upvotes", "downvotes" -> "timestamp";  // Ignored for DB, sorted in-memory
-            case "basesalary" -> "baseSalary";
-            case "totalcompensation" -> "totalCompensation";
-            case "seniority" -> "seniority";
-            case "timestamp" -> "timestamp";
-            default -> "timestamp";
-        };
     }
 }

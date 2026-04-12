@@ -1,6 +1,7 @@
 package lk.watupa.salary_submission.model;
 
 import jakarta.persistence.*;
+import lk.watupa.salary_submission.enums.EmploymentType;
 import lk.watupa.salary_submission.enums.ExperienceLevel;
 import lk.watupa.salary_submission.enums.Status;
 import lombok.*;
@@ -30,6 +31,10 @@ public class Submission {
     @Enumerated(EnumType.STRING)
     @Column(name = "experience_level", length = 50)
     private ExperienceLevel experienceLevel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "employment_type", length = 50)
+    private EmploymentType employmentType;
 
     @Column(name = "seniority")
     private Integer seniority;

@@ -27,6 +27,7 @@ public class SubmissionController {
                 req.getCompanyName(),
                 req.getJobTitle(),
                 req.getExperienceLevel(),
+                req.getEmploymentType(),
                 req.getSeniority(),
                 req.getCountry(),
                 req.getCurrency(),
