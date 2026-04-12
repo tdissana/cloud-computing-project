@@ -62,7 +62,7 @@ public class SubmissionSpecification {
 
             if (hasValue(req.employmentType())) {
                 try {
-                    EmploymentType type = EmploymentType.valueOf(req.employmentType());
+                    EmploymentType type = EmploymentType.from(req.employmentType());
                     predicates.add(cb.equal(root.get("employmentType"), type));
                 } catch (IllegalArgumentException ignored) {
                     predicates.add(cb.disjunction());
