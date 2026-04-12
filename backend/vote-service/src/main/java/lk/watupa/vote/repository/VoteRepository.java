@@ -11,19 +11,18 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from Vote v where v.submissionId = :submissionId and v.userId = :userId")
-    Optional<Vote> findBySubmissionIdAndUserIdForUpdate(@Param("submissionId") UUID submissionId,
+    Optional<Vote> findBySubmissionIdAndUserIdForUpdate(@Param("submissionId") Long submissionId,
                                                          @Param("userId") Long userId);
 
     @Modifying
     @Query("update Vote v set v.voteType = :voteType where v.submissionId = :submissionId and v.userId = :userId")
-    int updateVoteType(@Param("submissionId") UUID submissionId,
+    int updateVoteType(@Param("submissionId") Long submissionId,
                        @Param("userId") Long userId,
                        @Param("voteType") VoteType voteType);
 }

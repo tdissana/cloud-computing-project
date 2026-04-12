@@ -1,8 +1,8 @@
 package lk.watupa.stats.service;
 
+import lk.watupa.stats.client.SalarySubmissionClient;
 import lk.watupa.stats.payload.SalaryStatsResponse;
-import lk.watupa.stats.model.Submission;
-import lk.watupa.stats.repository.SubmissionRepository;
+import lk.watupa.stats.payload.SubmissionDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatsService {
 
-    private final SubmissionRepository submissionRepository;
+    private final SalarySubmissionClient salarySubmissionClient;
 
     public SalaryStatsResponse getStats(String role, String company, String level, String country) {
 
-        List<Submission> submissions = submissionRepository.findApprovedByFilters(
+        List<SubmissionDto> submissions = salarySubmissionClient.getApprovedSubmissions(
                 role, company, level, country
         );
 
@@ -34,7 +34,7 @@ public class StatsService {
         }
 
         List<Double> salaries = submissions.stream()
-                .map(Submission::getTotalCompensation)
+                .map(SubmissionDto::totalCompensation)
                 .sorted()
                 .toList();
 

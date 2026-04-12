@@ -1,11 +1,11 @@
 package lk.watupa.vote.service;
 
-import lk.watupa.vote.enums.Status;
+import lk.watupa.vote.client.SalarySubmissionClient;
 import lk.watupa.vote.enums.VoteType;
 import lk.watupa.vote.model.Vote;
 import lk.watupa.vote.model.VoteCount;
+import lk.watupa.vote.payload.VoteCountDto;
 import lk.watupa.vote.payload.VoteResponse;
-import lk.watupa.vote.repository.SubmissionRepository;
 import lk.watupa.vote.repository.VoteCountRepository;
 import lk.watupa.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +27,13 @@ public class VoteService {
 
     private final VoteRepository voteRepository;
     private final VoteCountRepository voteCountRepository;
-    private final SubmissionRepository submissionRepository;
+    private final SalarySubmissionClient salarySubmissionClient;
 
     @Value("${vote.approval.threshold:10}")
     private int voteApprovalThreshold;
 
     @Transactional
-    public VoteResponse castVote(UUID submissionId, Long userId, VoteType voteType) {
+    public VoteResponse castVote(Long submissionId, Long userId, VoteType voteType) {
         log.info("User {} casting {} on submission {}", userId, voteType, submissionId);
 
         Vote existingVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
@@ -90,10 +91,11 @@ public class VoteService {
 
         Vote vote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
                 .orElseThrow(() -> new RuntimeException("Unable to load saved vote"));
-        return mapToVoteResponse(vote);
+        VoteCount voteCount = voteCountRepository.findById(submissionId).orElse(null);
+        return mapToVoteResponse(vote, voteCount);
     }
 
-    private void applyCountDelta(UUID submissionId, int upvoteDelta, int downvoteDelta) {
+    private void applyCountDelta(Long submissionId, int upvoteDelta, int downvoteDelta) {
         if (upvoteDelta == 0 && downvoteDelta == 0) {
             return;
         }
@@ -104,7 +106,7 @@ public class VoteService {
         }
     }
 
-    private void updateSubmissionStatusIfThresholdReached(UUID submissionId) {
+    private void updateSubmissionStatusIfThresholdReached(Long submissionId) {
         VoteCount voteCount = voteCountRepository.findById(submissionId).orElse(null);
         if (voteCount == null) {
             return;
@@ -115,19 +117,47 @@ public class VoteService {
             return;
         }
 
-        int updatedRows = submissionRepository.updateStatusToApproved(submissionId, Status.APPROVED);
-        if (updatedRows > 0) {
+        try {
+            salarySubmissionClient.updateStatus(submissionId.toString(), "APPROVED");
             log.info("Submission {} marked as APPROVED after reaching {} votes", submissionId, totalVotes);
+        } catch (Exception e) {
+            log.warn("Failed to update submission {} status via salary-submission-service: {}",
+                    submissionId, e.getMessage());
         }
     }
 
-    private VoteResponse mapToVoteResponse(Vote vote) {
+    @Transactional(readOnly = true)
+    public List<VoteCountDto> getVoteCountsBySubmissionIds(List<String> submissionIds) {
+        List<Long> ids = new ArrayList<>();
+        for (String id : submissionIds) {
+            try {
+                ids.add(Long.parseLong(id));
+            } catch (NumberFormatException ignored) {
+                // skip non-numeric ids
+            }
+        }
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return voteCountRepository.findBySubmissionIdIn(ids).stream()
+                .map(vc -> new VoteCountDto(
+                        vc.getSubmissionId().toString(),
+                        (int) vc.getUpvoteCount(),
+                        (int) vc.getDownvoteCount()))
+                .toList();
+    }
+
+    private VoteResponse mapToVoteResponse(Vote vote, VoteCount voteCount) {
         VoteResponse response = new VoteResponse();
         response.setId(vote.getId());
         response.setSubmissionId(vote.getSubmissionId());
         response.setUserId(vote.getUserId());
         response.setVoteType(vote.getVoteType());
         response.setCreatedAt(vote.getCreatedAt());
+        if (voteCount != null) {
+            response.setUpvoteCount((int) voteCount.getUpvoteCount());
+            response.setDownvoteCount((int) voteCount.getDownvoteCount());
+        }
         return response;
     }
 }

@@ -7,10 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
+import java.util.Collection;
+import java.util.List;
 
 @Repository
-public interface VoteCountRepository extends JpaRepository<VoteCount, UUID> {
+public interface VoteCountRepository extends JpaRepository<VoteCount, Long> {
+
+    List<VoteCount> findBySubmissionIdIn(Collection<Long> submissionIds);
 
     @Modifying
     @Query(value = """
@@ -20,7 +23,7 @@ public interface VoteCountRepository extends JpaRepository<VoteCount, UUID> {
                 SELECT 1 FROM community.vote_counts WHERE submission_id = :submissionId
             )
             """, nativeQuery = true)
-    void ensureSubmissionCountExists(@Param("submissionId") UUID submissionId);
+    void ensureSubmissionCountExists(@Param("submissionId") Long submissionId);
 
     @Modifying
     @Query(value = """
@@ -30,7 +33,7 @@ public interface VoteCountRepository extends JpaRepository<VoteCount, UUID> {
                 updated_at = CURRENT_TIMESTAMP
             WHERE submission_id = :submissionId
             """, nativeQuery = true)
-    int applyVoteDelta(@Param("submissionId") UUID submissionId,
+    int applyVoteDelta(@Param("submissionId") Long submissionId,
                        @Param("upvoteDelta") int upvoteDelta,
                        @Param("downvoteDelta") int downvoteDelta);
 }

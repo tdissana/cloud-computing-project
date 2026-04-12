@@ -1,15 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS community;
-CREATE SCHEMA IF NOT EXISTS salary;
-
-CREATE TABLE IF NOT EXISTS salary.submissions (
-    id        UUID PRIMARY KEY,
-    status    VARCHAR(20) NOT NULL DEFAULT 'PENDING',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE IF NOT EXISTS community.votes (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-    submission_id UUID        NOT NULL,
+    submission_id BIGINT      NOT NULL,
     user_id       BIGINT      NOT NULL,
     vote_type     VARCHAR(10) NOT NULL CHECK (vote_type IN ('UPVOTE', 'DOWNVOTE')),
     created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -18,7 +11,7 @@ CREATE TABLE IF NOT EXISTS community.votes (
 );
 
 CREATE TABLE IF NOT EXISTS community.vote_counts (
-    submission_id UUID      PRIMARY KEY,
+    submission_id BIGINT    PRIMARY KEY,
     upvote_count  BIGINT    NOT NULL DEFAULT 0,
     downvote_count BIGINT   NOT NULL DEFAULT 0,
     updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

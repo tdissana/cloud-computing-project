@@ -1,6 +1,7 @@
 package lk.watupa.vote.controller;
 
 import jakarta.validation.Valid;
+import lk.watupa.vote.payload.VoteCountDto;
 import lk.watupa.vote.payload.VoteRequest;
 import lk.watupa.vote.payload.VoteResponse;
 import lk.watupa.vote.service.VoteService;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/votes")
@@ -30,6 +33,12 @@ public class VoteController {
                 voteRequest.getVoteType());
 
         return new ResponseEntity<>(voteResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/counts")
+    public ResponseEntity<List<VoteCountDto>> getVoteCounts(
+            @RequestBody List<String> submissionIds) {
+        return ResponseEntity.ok(voteService.getVoteCountsBySubmissionIds(submissionIds));
     }
 }
 

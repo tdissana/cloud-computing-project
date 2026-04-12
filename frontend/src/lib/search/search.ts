@@ -114,7 +114,7 @@ export async function fetchFilterOptions(): Promise<
 
 export async function voteSubmission(
   submissionId: string,
-  voteType: "UP" | "DOWN"
+  voteType: "UPVOTE" | "DOWNVOTE"
 ): Promise<APIResponse<unknown>> {
   try {
     const token =
@@ -123,7 +123,7 @@ export async function voteSubmission(
     if (!token) {
       return {
         success: false,
-        error: "Please log in to vote.",
+        error: "__AUTH_REQUIRED__",
       };
     }
 
@@ -135,6 +135,13 @@ export async function voteSubmission(
       },
       body: JSON.stringify({ submissionId, voteType }),
     });
+
+    if (res.status === 401) {
+      return {
+        success: false,
+        error: "__AUTH_REQUIRED__",
+      };
+    }
 
     const payload: APIResponse<unknown> = await res
       .json()

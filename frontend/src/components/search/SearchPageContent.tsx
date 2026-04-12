@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   ChevronLeft,
@@ -56,6 +57,8 @@ interface SearchPageContentProps {
 }
 
 export function SearchPageContent({ verificationStatus: initialStatus }: SearchPageContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [verificationStatus, setVerificationStatus] = useState<VerificationMode>(
     initialStatus || "BOTH"
   );
@@ -88,6 +91,45 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
       setLoadingOptions(false);
     };
     loadOptions();
+
+    // Restore search state after auth redirect
+    const saved = sessionStorage.getItem("search_state");
+    if (saved) {
+      sessionStorage.removeItem("search_state");
+      try {
+        const state = JSON.parse(saved);
+        if (state.draft) setDraft(state.draft);
+        if (state.verificationStatus) setVerificationStatus(state.verificationStatus);
+        if (state.filters) {
+          const restoredFilters = state.filters as SalarySearchFilters;
+          setFilters(restoredFilters);
+          setSearched(true);
+          // Re-run the search with restored filters
+          (async () => {
+            setLoading(true);
+            const result = await searchSalaries(restoredFilters);
+            if (result.success && result.data) {
+              setResults(result.data);
+            }
+            setLoading(false);
+          })();
+        }
+      } catch {
+        // ignore corrupt state
+      }
+    }
+  }, []);
+
+  // Re-fetch filter options when tab regains focus
+  useEffect(() => {
+    const onFocus = async () => {
+      const result = await fetchFilterOptions();
+      if (result.success && result.data) {
+        setFilterOptions(result.data);
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   const handleSearch = useCallback(async () => {
@@ -236,32 +278,34 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
   };
 
   const handleVote = useCallback(
-    async (submissionId: string, voteType: "UP" | "DOWN") => {
+    async (submissionId: string, voteType: "UPVOTE" | "DOWNVOTE") => {
       setVotingId(submissionId);
       const result = await voteSubmission(submissionId, voteType);
 
       if (!result.success) {
+        if (result.error === "__AUTH_REQUIRED__") {
+          // Save current search state so it can be restored after login
+          sessionStorage.setItem(
+            "search_state",
+            JSON.stringify({ filters, draft, verificationStatus, searched })
+          );
+          sessionStorage.setItem("redirect_after_login", pathname);
+          router.push("/auth");
+          return;
+        }
         setError(result.error ?? "Failed to submit vote.");
         setVotingId(null);
         return;
       }
 
-      setResults((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          content: prev.content.map((salary) => {
-            if (salary.id !== submissionId) return salary;
-            if (voteType === "UP") {
-              return { ...salary, upvotes: (salary.upvotes || 0) + 1 };
-            }
-            return { ...salary, downvotes: (salary.downvotes || 0) + 1 };
-          }),
-        };
-      });
+      // Re-fetch results from server so vote counts and verification status are up to date
+      const refreshed = await searchSalaries(filters);
+      if (refreshed.success && refreshed.data) {
+        setResults(refreshed.data);
+      }
       setVotingId(null);
     },
-    []
+    [filters, draft, verificationStatus, searched, pathname, router]
   );
 
   const clearAll = () => {
