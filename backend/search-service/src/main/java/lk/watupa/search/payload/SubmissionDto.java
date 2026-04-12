@@ -7,6 +7,7 @@ public record SubmissionDto(
         String companyName,
         String jobTitle,
         String experienceLevel,
+        String employmentType,
         Integer seniority,
         String country,
         String currency,

@@ -19,7 +19,7 @@ public class SubmissionQueryController {
             @RequestBody(required = false) SubmissionSearchRequest request) {
         if (request == null) {
             request = new SubmissionSearchRequest(
-                    null, null, null, null, null, null, null, null, null, null, null, null);
+                    null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
         return ResponseEntity.ok(queryService.search(request));
     }

@@ -1,4 +1,11 @@
-export const LEVELS = ["Junior", "Mid", "Senior", "Lead"];
+export const LEVELS = ["Junior", "Mid", "Senior", "Lead", "Principal", "Manager"];
+
+export const EMPLOYMENT_TYPES = [
+  { value: "FullTime", label: "Full-time" },
+  { value: "PartTime", label: "Part-time" },
+  { value: "Contract", label: "Contract" },
+  { value: "Freelance", label: "Freelance" },
+];
 
 export const COUNTRIES = [
   "Sri Lanka",

@@ -1,5 +1,6 @@
 package lk.watupa.salary_submission.service;
 
+import lk.watupa.salary_submission.enums.EmploymentType;
 import lk.watupa.salary_submission.enums.ExperienceLevel;
 import lk.watupa.salary_submission.enums.Status;
 import lk.watupa.salary_submission.model.Submission;
@@ -17,6 +18,7 @@ public class SubmissionService {
             String companyName,
             String jobTitle,
             ExperienceLevel experienceLevel,
+            EmploymentType employmentType,
             Integer seniority,
             String country,
             String currency,
@@ -29,6 +31,7 @@ public class SubmissionService {
                 .companyName(companyName)
                 .jobTitle(jobTitle)
                 .experienceLevel(experienceLevel)
+                .employmentType(employmentType)
                 .seniority(seniority)
                 .country(country)
                 .currency(currency)

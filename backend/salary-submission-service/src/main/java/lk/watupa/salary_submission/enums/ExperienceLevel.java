@@ -4,5 +4,7 @@ public enum ExperienceLevel {
     Junior,
     Mid,
     Senior,
-    Lead
+    Lead,
+    Principal,
+    Manager
 }

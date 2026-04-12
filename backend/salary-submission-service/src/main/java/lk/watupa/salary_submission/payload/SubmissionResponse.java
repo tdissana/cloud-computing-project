@@ -13,6 +13,7 @@ public class SubmissionResponse {
     private String companyName;
     private String jobTitle;
     private String experienceLevel;
+    private String employmentType;
     private Integer seniority;
     private String country;
     private String currency;
@@ -29,6 +30,7 @@ public class SubmissionResponse {
                 .companyName(Boolean.TRUE.equals(s.getAnonymize()) ? null : s.getCompanyName())
                 .jobTitle(s.getJobTitle())
                 .experienceLevel(s.getExperienceLevel() != null ? s.getExperienceLevel().name() : null)
+                .employmentType(s.getEmploymentType() != null ? s.getEmploymentType().name() : null)
                 .seniority(s.getSeniority())
                 .country(s.getCountry())
                 .currency(s.getCurrency())

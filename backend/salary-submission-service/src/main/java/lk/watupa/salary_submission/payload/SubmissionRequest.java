@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lk.watupa.salary_submission.enums.EmploymentType;
 import lk.watupa.salary_submission.enums.ExperienceLevel;
 import lombok.Data;
 
@@ -20,6 +21,9 @@ public class SubmissionRequest {
 
     @NotNull(message = "Experience level is required")
     private ExperienceLevel experienceLevel;
+
+    @NotNull(message = "Employment type is required")
+    private EmploymentType employmentType;
 
     /** Years of experience (seniority). */
     private Integer seniority;

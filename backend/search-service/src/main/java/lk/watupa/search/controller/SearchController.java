@@ -24,10 +24,10 @@ public class SearchController {
     public ResponseEntity<PagedResponse<SalaryResultResponse>> searchSalaries(
             @Valid @RequestBody SalarySearchRequest request
     ) {
-        log.info("Salary search (POST): country={}, company={}, jobTitle={}, level={}, currency={}, " +
+        log.info("Salary search (POST): country={}, company={}, jobTitle={}, level={}, employmentType={}, currency={}, " +
                         "minSeniority={}, maxSeniority={}, verificationStatus={}, page={}, size={}, sortBy={}, sortDir={}",
                 request.getCountry(), request.getCompany(), request.getJobTitle(),
-                request.getExperienceLevel(), request.getCurrency(),
+                request.getExperienceLevel(), request.getEmploymentType(), request.getCurrency(),
                 request.getMinSeniority(), request.getMaxSeniority(), request.getVerificationStatus(),
                 request.getPage(), request.getSize(), request.getSortBy(), request.getSortDir());
 

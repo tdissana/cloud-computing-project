@@ -8,6 +8,7 @@ CREATE TABLE salary.submission
     company_name       VARCHAR(255),
     job_title          VARCHAR(255),
     experience_level   VARCHAR(50),
+    employment_type    VARCHAR(50),
     seniority          INT,
     country            VARCHAR(100) DEFAULT 'Sri Lanka',
     currency           VARCHAR(10)  DEFAULT 'LKR',

@@ -5,6 +5,7 @@ public record SubmissionSearchRequest(
         String company,
         String jobTitle,
         String experienceLevel,
+        String employmentType,
         String currency,
         Integer minSeniority,
         Integer maxSeniority,

@@ -1,6 +1,7 @@
 package lk.watupa.salary_submission.repository;
 
 import jakarta.persistence.criteria.Predicate;
+import lk.watupa.salary_submission.enums.EmploymentType;
 import lk.watupa.salary_submission.enums.ExperienceLevel;
 import lk.watupa.salary_submission.enums.Status;
 import lk.watupa.salary_submission.model.Submission;
@@ -54,6 +55,15 @@ public class SubmissionSpecification {
                     ExperienceLevel level = ExperienceLevel.valueOf(
                             titleCase(req.experienceLevel()));
                     predicates.add(cb.equal(root.get("experienceLevel"), level));
+                } catch (IllegalArgumentException ignored) {
+                    predicates.add(cb.disjunction());
+                }
+            }
+
+            if (hasValue(req.employmentType())) {
+                try {
+                    EmploymentType type = EmploymentType.valueOf(req.employmentType());
+                    predicates.add(cb.equal(root.get("employmentType"), type));
                 } catch (IllegalArgumentException ignored) {
                     predicates.add(cb.disjunction());
                 }

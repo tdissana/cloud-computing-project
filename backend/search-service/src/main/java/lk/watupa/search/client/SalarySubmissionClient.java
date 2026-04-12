@@ -52,6 +52,7 @@ public class SalarySubmissionClient {
         if (req.getCompany() != null) map.put("company", req.getCompany());
         if (req.getJobTitle() != null) map.put("jobTitle", req.getJobTitle());
         if (req.getExperienceLevel() != null) map.put("experienceLevel", req.getExperienceLevel());
+        if (req.getEmploymentType() != null) map.put("employmentType", req.getEmploymentType());
         if (req.getCurrency() != null) map.put("currency", req.getCurrency());
         if (req.getMinSeniority() != null) map.put("minSeniority", req.getMinSeniority());
         if (req.getMaxSeniority() != null) map.put("maxSeniority", req.getMaxSeniority());

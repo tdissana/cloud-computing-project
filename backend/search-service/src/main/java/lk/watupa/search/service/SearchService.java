@@ -98,7 +98,7 @@ public class SearchService {
                 .companyName(anon ? "Anonymous" : s.companyName())
                 .jobTitle(s.jobTitle())
                 .seniorityLevel(level)
-                .employmentType("Full-time")
+                .employmentType(s.employmentType() != null ? formatEmploymentType(s.employmentType()) : "Full-time")
                 .country(s.country())
                 .city(anon ? null : null)
                 .grossMonthlySalary(gross)
@@ -119,6 +119,15 @@ public class SearchService {
             return "";
         }
         return Character.toUpperCase(raw.charAt(0)) + raw.substring(1).toLowerCase();
+    }
+
+    private static String formatEmploymentType(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        return switch (raw) {
+            case "FullTime" -> "Full-time";
+            case "PartTime" -> "Part-time";
+            default -> raw;
+        };
     }
 
     private List<SalaryResultResponse> sortResults(List<SalaryResultResponse> dtos, SalarySearchRequest request) {

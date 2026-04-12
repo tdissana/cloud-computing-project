@@ -2,6 +2,7 @@ export interface SalarySubmissionRequest {
   companyName: string;
   jobTitle: string;
   experienceLevel: string;
+  employmentType: string;
   seniority: number | null;
   country: string;
   currency: string;

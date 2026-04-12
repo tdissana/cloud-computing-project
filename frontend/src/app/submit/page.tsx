@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Lock, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react";
 
 import { submitSalary } from "@/lib/salary/submit";
-import { LEVELS, COUNTRIES, CURRENCIES, EXPERIENCE_OPTIONS } from "@/lib/salary/constants";
+import { LEVELS, COUNTRIES, CURRENCIES, EXPERIENCE_OPTIONS, EMPLOYMENT_TYPES } from "@/lib/salary/constants";
 import { SalarySubmissionRequest } from "@/types/salary";
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -107,13 +107,14 @@ const EMPTY_FORM: SalarySubmissionRequest = {
   companyName: "",
   jobTitle: "",
   experienceLevel: "",
+  employmentType: "",
   seniority: null,
   country: "Sri Lanka",
   currency: "LKR",
   totalCompensation: 0,
   baseSalary: 0,
   skills: "",
-  anonymize: true,
+  anonymize: false,
 };
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -169,6 +170,7 @@ export default function SubmitPage() {
     if (!form.jobTitle || form.jobTitle.trim().length < 2) step1Errors.jobTitle = "Please enter a job title (min 2 characters)";
     if (!form.companyName || form.companyName.trim().length < 2) step1Errors.companyName = "Please enter a company name (min 2 characters)";
     if (!form.experienceLevel) step1Errors.experienceLevel = "Please select an experience level";
+    if (!form.employmentType) step1Errors.employmentType = "Please select an employment type";
     if (!form.country) step1Errors.country = "Please select a country";
     if (Object.keys(step1Errors).length > 0) { setErrors(step1Errors); return; }
     setStep(2);
@@ -299,6 +301,7 @@ export default function SubmitPage() {
                       <FloatingField id="jobTitle" label="Job Title" value={form.jobTitle} onChange={(v) => set("jobTitle", v)} error={errors.jobTitle} placeholder="e.g. Software Engineer" maxLength={255} />
                       <FloatingField id="companyName" label="Company Name" value={form.companyName} onChange={(v) => set("companyName", v)} error={errors.companyName} placeholder="e.g. WSO2" maxLength={255} />
                       <SelectField id="experienceLevel" label="Experience Level" value={form.experienceLevel} onChange={(v) => set("experienceLevel", v)} error={errors.experienceLevel} options={LEVELS.map((l) => ({ value: l, label: l }))} />
+                      <SelectField id="employmentType" label="Employment Type" value={form.employmentType} onChange={(v) => set("employmentType", v)} error={errors.employmentType} options={EMPLOYMENT_TYPES.map((t) => ({ value: t.value, label: t.label }))} />
                       <SelectField id="seniority" label="Years of Experience" value={form.seniority !== null ? String(form.seniority) : ""} onChange={(v) => set("seniority", v ? Number(v) : null)} options={EXPERIENCE_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} />
                       <SelectField id="country" label="Country" value={form.country} onChange={(v) => set("country", v)} error={errors.country} options={COUNTRIES.map((c) => ({ value: c, label: c }))} />
                       <button className="submit-btn" onClick={handleNext}>Continue to Compensation →</button>
