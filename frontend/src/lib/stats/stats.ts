@@ -1,7 +1,7 @@
 import { APIResponse } from "@/types/common";
 import { SalaryStatsResponse, StatsFilters } from "@/types/stats";
 
-const BFF_BASE = process.env.NEXT_PUBLIC_BFF_URL ?? "";
+const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
 
 export async function fetchStats(
   filters: StatsFilters
@@ -13,7 +13,7 @@ export async function fetchStats(
   if (filters.country) params.set("country", filters.country);
 
   try {
-    const res = await fetch(`${BFF_BASE}/api/stats?${params.toString()}`);
+    const res = await fetch(`${BFF_URL}/api/stats?${params.toString()}`);
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
     const json: { success: boolean; data: SalaryStatsResponse } = await res.json();
     return { success: true, data: json.data };

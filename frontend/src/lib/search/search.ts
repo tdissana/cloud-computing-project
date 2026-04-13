@@ -6,14 +6,7 @@ import {
   FilterOptionsResponse,
 } from "@/types/search";
 
-function resolveBffBase(): string {
-  const rawBase = process.env.NEXT_PUBLIC_BFF_URL?.trim();
-  if (!rawBase) return "/bff";
-  if (rawBase.endsWith("/bff")) return rawBase;
-  return `${rawBase}/bff`;
-}
-
-const BFF_BASE = resolveBffBase();
+const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
 
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (payload && typeof payload === "object" && "error" in payload) {
@@ -56,7 +49,7 @@ export async function searchSalaries(
   body.sortDir = filters.sortDir ?? "desc";
 
   try {
-    const res = await fetch(`${BFF_BASE}/api/search/salaries`, {
+    const res = await fetch(`${BFF_URL}/api/search/salaries`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -91,7 +84,7 @@ export async function fetchFilterOptions(): Promise<
   APIResponse<FilterOptionsResponse>
 > {
   try {
-    const res = await fetch(`${BFF_BASE}/api/search/filters`);
+    const res = await fetch(`${BFF_URL}/api/search/filters`);
     const payload: APIResponse<FilterOptionsResponse> = await res
       .json()
       .catch(() => ({ success: false, error: `Server error: ${res.status}` }));
@@ -127,7 +120,7 @@ export async function voteSubmission(
       };
     }
 
-    const res = await fetch(`${BFF_BASE}/api/votes`, {
+    const res = await fetch(`${BFF_URL}/api/votes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
