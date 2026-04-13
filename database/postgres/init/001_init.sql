@@ -1,9 +1,23 @@
--- Schema: salary
+-- identity schema
+
+CREATE SCHEMA IF NOT EXISTS identity;
+
+CREATE TABLE IF NOT EXISTS identity.users (
+    user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username VARCHAR(20) NOT NULL,
+    email VARCHAR(50) NOT NULL,
+    password VARCHAR(120) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uk_users_username UNIQUE (username),
+    CONSTRAINT uk_users_email UNIQUE (email)
+);
+
+-- salary schema
+
 CREATE SCHEMA IF NOT EXISTS salary;
 
-DROP TABLE IF EXISTS salary.submission;
-
-CREATE TABLE salary.submission
+CREATE TABLE IF NOT EXISTS salary.submission
 (
     id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     company_name       VARCHAR(255),
@@ -21,17 +35,7 @@ CREATE TABLE salary.submission
     timestamp          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE SCHEMA IF NOT EXISTS identity;
-
-CREATE TABLE IF NOT EXISTS identity.users (
-    user_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    username VARCHAR(20) NOT NULL,
-    email VARCHAR(50) NOT NULL,
-    password VARCHAR(120) NOT NULL,
-
-    CONSTRAINT uk_users_username UNIQUE (username),
-    CONSTRAINT uk_users_email UNIQUE (email)
-);
+-- community schema
 
 CREATE SCHEMA IF NOT EXISTS community;
 
