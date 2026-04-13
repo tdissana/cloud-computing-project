@@ -1,8 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS salary;
 
-DROP TABLE IF EXISTS salary.submission;
-
-CREATE TABLE salary.submission
+CREATE TABLE IF NOT EXISTS salary.submission
 (
     id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     company_name       VARCHAR(255),
