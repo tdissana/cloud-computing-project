@@ -594,7 +594,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   ))}
                   <button
                     onClick={clearAll}
-                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors"
+                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors cursor-pointer"
                   >
                     Clear all
                   </button>
@@ -605,7 +605,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                 <Button
                   onClick={handleSearch}
                   disabled={loading}
-                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0"
+                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0 cursor-pointer"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -637,7 +637,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "VERIFIED"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading && "opacity-50 cursor-not-allowed"
+                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 )}
               >
                 Verified Only
@@ -651,7 +651,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "UNVERIFIED"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading && "opacity-50 cursor-not-allowed"
+                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 )}
               >
                 Unverified Only
@@ -665,7 +665,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "BOTH"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading && "opacity-50 cursor-not-allowed"
+                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 )}
               >
                 All Results
@@ -778,7 +778,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                       <Button
                         onClick={() => handlePageChange(results.page - 1)}
                         disabled={results.page === 0 || loading}
-                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0"
+                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0 cursor-pointer"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
@@ -790,7 +790,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                       <Button
                         onClick={() => handlePageChange(results.page + 1)}
                         disabled={results.last || loading}
-                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0"
+                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0 cursor-pointer"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Button>

@@ -256,7 +256,7 @@ export default function StatsPage() {
                   ))}
                   <button
                     onClick={clearAll}
-                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors"
+                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors cursor-pointer"
                   >
                     Clear all
                   </button>
@@ -268,7 +268,7 @@ export default function StatsPage() {
                 <Button
                   onClick={handleSearch}
                   disabled={loading || active.length === 0}
-                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0"
+                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0 cursor-pointer"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
