@@ -338,6 +338,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        button, [role='button'], select { cursor: pointer !important; }
         .search-spinner {
           display: inline-block;
           width: 14px;
@@ -372,17 +373,6 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
           }}
         />
 
-        <div className="relative z-10 border-b border-white/[0.07] bg-[#0b0f1a]/80 backdrop-blur sticky top-0">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-3">
-            <Briefcase className="text-[#6ea8fe] w-5 h-5" />
-            <span
-              className="font-bold text-[#e8edf5] tracking-tight"
-              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-            >
-              Salary Search
-            </span>
-          </div>
-        </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-10 space-y-10">
 
@@ -594,7 +584,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   ))}
                   <button
                     onClick={clearAll}
-                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors cursor-pointer"
+                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors"
                   >
                     Clear all
                   </button>
@@ -605,7 +595,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                 <Button
                   onClick={handleSearch}
                   disabled={loading}
-                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0 cursor-pointer"
+                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -637,7 +627,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "VERIFIED"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  loading && "opacity-50 cursor-not-allowed"
                 )}
               >
                 Verified Only
@@ -651,7 +641,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "UNVERIFIED"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  loading && "opacity-50 cursor-not-allowed"
                 )}
               >
                 Unverified Only
@@ -665,7 +655,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                   verificationStatus === "BOTH"
                     ? "bg-[#6ea8fe]/15 text-[#6ea8fe] border border-[#6ea8fe]/35 hover:bg-[#6ea8fe]/25"
                     : "bg-white/[0.04] text-[#4a5572] border border-white/[0.08] hover:bg-white/[0.08] hover:text-[#e8edf5]",
-                  loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  loading && "opacity-50 cursor-not-allowed"
                 )}
               >
                 All Results
@@ -778,7 +768,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                       <Button
                         onClick={() => handlePageChange(results.page - 1)}
                         disabled={results.page === 0 || loading}
-                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0 cursor-pointer"
+                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0"
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
@@ -790,7 +780,7 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
                       <Button
                         onClick={() => handlePageChange(results.page + 1)}
                         disabled={results.last || loading}
-                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0 cursor-pointer"
+                        className="bg-white/[0.05] hover:bg-white/[0.1] text-[#e8edf5] border-white/[0.08] h-9 w-9 p-0"
                       >
                         <ChevronRight className="w-4 h-4" />
                       </Button>

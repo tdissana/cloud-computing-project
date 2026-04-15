@@ -28,6 +28,7 @@ import { LEVELS, COUNTRIES } from "@/lib/stats/constants";
 import { fmt, activeFilters } from "@/lib/stats/helpers";
 import { StatCard } from "@/components/stats/StatCard";
 import { SalaryStatsResponse, StatsFilters } from "@/types/stats";
+import { Navbar } from "@/components/shared/Navbar";
 
 /* ─── Main Page ──────────────────────────────────────────────────── */
 
@@ -88,6 +89,7 @@ export default function StatsPage() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        button, [role='button'], select { cursor: pointer !important; }
         .stats-spinner {
           display: inline-block;
           width: 14px;
@@ -119,15 +121,7 @@ export default function StatsPage() {
           style={{ bottom: "-15%", right: "-5%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(91,91,214,0.08) 0%, transparent 65%)" }}
         />
 
-        {/* ── Header ── */}
-        <div className="relative z-10 border-b border-white/[0.07] bg-[#0b0f1a]/80 backdrop-blur sticky top-0">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
-            <BarChart2 className="text-[#6ea8fe] w-5 h-5" />
-            <span className="font-bold text-[#e8edf5] tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Salary Statistics
-            </span>
-          </div>
-        </div>
+        <Navbar />
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 space-y-10">
 
@@ -256,7 +250,7 @@ export default function StatsPage() {
                   ))}
                   <button
                     onClick={clearAll}
-                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors cursor-pointer"
+                    className="text-xs text-[#3a4560] hover:text-[#6ea8fe] underline underline-offset-2 transition-colors"
                   >
                     Clear all
                   </button>
@@ -268,7 +262,7 @@ export default function StatsPage() {
                 <Button
                   onClick={handleSearch}
                   disabled={loading || active.length === 0}
-                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0 cursor-pointer"
+                  className="bg-gradient-to-br from-[#3b7ff5] to-[#5b5bd6] hover:from-[#5294f7] hover:to-[#6e6edc] text-white font-bold px-6 uppercase tracking-widest text-[13px] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(59,127,245,0.35)] disabled:opacity-50 border-0"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">

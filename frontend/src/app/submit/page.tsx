@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Lock, CheckCircle2, AlertCircle, ChevronDown } from "lucide-react";
+import { Navbar } from "@/components/shared/Navbar";
 
 import { submitSalary } from "@/lib/salary/submit";
 import { LEVELS, COUNTRIES, CURRENCIES, EXPERIENCE_OPTIONS, EMPLOYMENT_TYPES } from "@/lib/salary/constants";
@@ -206,6 +207,7 @@ export default function SubmitPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes successPop { 0% { transform: scale(0.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
         .fade-up { animation: fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) forwards; }
+        button, [role='button'], select { cursor: pointer !important; }
         .submit-btn { width: 100%; padding: 13px 20px; background: linear-gradient(135deg, #3b7ff5 0%, #5b5bd6 100%); border: none; border-radius: 10px; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(59,127,245,0.35); }
         .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -222,14 +224,13 @@ export default function SubmitPage() {
       <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }} />
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(30,60,120,0.35) 0%, transparent 70%)" }} />
 
+      <Navbar />
+
       <div style={{ minHeight: "100vh", display: "flex", position: "relative", zIndex: 1 }}>
 
         {/* ── Left panel ── */}
         <div className="left-panel" style={{ flex: "0 0 42%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 52px", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, #3b7ff5, #5b5bd6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>💼</div>
-            <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: "17px", color: "#e8edf5", letterSpacing: "-0.01em" }}>watupa<span style={{ color: "#6ea8fe" }}>.lk</span></span>
-          </div>
+
           <div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#6ea8fe", marginBottom: "18px" }}>Salary Submission</p>
             <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: "clamp(28px, 3.2vw, 42px)", fontWeight: 400, lineHeight: 1.2, color: "#e8edf5", letterSpacing: "-0.01em", marginBottom: "22px" }}>Share your salary.<br /><em style={{ color: "#6ea8fe" }}>Help others know their worth.</em></h1>
