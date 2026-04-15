@@ -123,7 +123,7 @@ export default function StatsPage() {
 
         <Navbar />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 space-y-10">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-10">
 
           {/* ── Hero ── */}
           <div className="space-y-2">
@@ -415,6 +415,13 @@ export default function StatsPage() {
             </div>
           )}
         </div>
+
+        {/* ── Footer ── */}
+        <footer className="text-center py-6 relative z-10" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
+            © 2026 watupa.lk · Privacy-first · Open data
+          </p>
+        </footer>
       </main>
     </>
   );

@@ -9,6 +9,7 @@ import { FloatingInput } from "@/components/identity/FloatingInput";
 import { StrengthBar } from "@/components/identity/StrengthBar";
 import { validateLogin, validateSignup } from "@/lib/identity/validations";
 import { AlertBox } from "@/components/identity/AlertBox";
+import { Navbar } from "@/components/shared/Navbar";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -342,10 +343,13 @@ export default function AuthPage() {
         }}
       />
 
+      {/* Navbar */}
+      <Navbar />
+
       {/* Layout */}
       <div
         style={{
-          minHeight: "100vh",
+          minHeight: "calc(100vh - 57px)",
           display: "flex",
           position: "relative",
           zIndex: 1,
@@ -363,35 +367,6 @@ export default function AuthPage() {
           }}
           className="left-panel"
         >
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, #3b7ff5, #5b5bd6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "16px",
-              }}
-            >
-              💼
-            </div>
-            <span
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: "17px",
-                color: "#e8edf5",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              watupa<span style={{ color: "#6ea8fe" }}>.lk</span>
-            </span>
-          </div>
-
           {/* Hero text */}
           <div>
             <p
@@ -477,16 +452,7 @@ export default function AuthPage() {
             </div>
           </div>
 
-          {/* Footer */}
-          <p
-            style={{
-              fontSize: "11px",
-              color: "white",
-              letterSpacing: "0.03em",
-            }}
-          >
-            © {new Date().getFullYear()} watupa.lk · Privacy-first · Open data
-          </p>
+          <div />
         </div>
 
         {/* Right panel — auth form */}
@@ -500,40 +466,6 @@ export default function AuthPage() {
           }}
         >
           <div style={{ width: "100%", maxWidth: "400px" }}>
-            {/* Mobile logo (only shown when left panel is hidden) */}
-            <div
-              style={{ marginBottom: "32px", display: "none" }}
-              className="mobile-logo"
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <div
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "7px",
-                    background: "linear-gradient(135deg, #3b7ff5, #5b5bd6)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                  }}
-                >
-                  💼
-                </div>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "16px",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  watupa<span style={{ color: "#6ea8fe" }}>.lk</span>
-                </span>
-              </div>
-            </div>
-
             {/* Heading */}
             <div style={{ marginBottom: "28px" }}>
               <h2
@@ -814,11 +746,17 @@ export default function AuthPage() {
         </div>
       </div>
 
+      {/* ── Footer ── */}
+      <footer style={{ textAlign: "center", padding: "24px 16px", position: "relative", zIndex: 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
+          © 2026 watupa.lk · Privacy-first · Open data
+        </p>
+      </footer>
+
       {/* Responsive: hide left panel on small screens */}
       <style>{`
         @media (max-width: 820px) {
           .left-panel { display: none !important; }
-          .mobile-logo { display: flex !important; }
         }
       `}</style>
     </>

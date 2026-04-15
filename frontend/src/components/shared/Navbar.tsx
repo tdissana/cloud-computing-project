@@ -21,13 +21,18 @@ export function Navbar() {
         input[type="submit"], input[type="button"] {
           cursor: pointer !important;
         }
+        @media (max-width: 480px) {
+          .nav-tab-label { display: none !important; }
+          .nav-tabs { gap: 2px !important; }
+          .nav-tab { padding: 7px 10px !important; }
+        }
       `}</style>
 
       <nav
         className="relative z-20 border-b border-white/[0.07] bg-[#0b0f1a]/90 backdrop-blur-xl sticky top-0"
         style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
 
           {/* ── Logo → home ── */}
           <button
@@ -56,12 +61,13 @@ export function Navbar() {
           </button>
 
           {/* ── Nav tabs ── */}
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <div className="nav-tabs" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             {tabs.map((t) => {
               const active = pathname === t.href || pathname.startsWith(t.href + "/");
               return (
                 <button
                   key={t.href}
+                  className="nav-tab"
                   onClick={() => router.push(t.href)}
                   style={{
                     display: "flex", alignItems: "center", gap: "8px",
@@ -92,7 +98,7 @@ export function Navbar() {
                   }}
                 >
                   {t.icon}
-                  <span>{t.label}</span>
+                  <span className="nav-tab-label">{t.label}</span>
                 </button>
               );
             })}

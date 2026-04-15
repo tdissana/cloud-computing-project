@@ -78,61 +78,11 @@ function FeatureCard({
   );
 }
 
-// ─── CTA Button — matches submit page .submit-btn exactly ─────────────────────
-
-function CtaButton({
-  children, onClick, variant = "primary",
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  variant?: "primary" | "secondary";
-}) {
-  const [hovered, setHovered] = useState(false);
-
-  const base: React.CSSProperties = {
-    display: "inline-flex", alignItems: "center", justifyContent: "center",
-    gap: "8px", padding: "13px 28px",
-    borderRadius: "10px",
-    fontSize: "13.5px", fontWeight: 700,
-    letterSpacing: "0.06em", textTransform: "uppercase",
-    cursor: "pointer",
-    transition: "transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease",
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
-    border: "none",
-  };
-
-  const primaryStyle: React.CSSProperties = {
-    ...base,
-    background: "linear-gradient(135deg, #3b7ff5 0%, #5b5bd6 100%)",
-    color: "#fff",
-    boxShadow: hovered ? "0 10px 28px rgba(59,127,245,0.35)" : "none",
-    transform: hovered ? "translateY(-2px)" : "none",
-  };
-
-  const secondaryStyle: React.CSSProperties = {
-    ...base,
-    background: hovered ? "rgba(110,168,254,0.07)" : "rgba(255,255,255,0.04)",
-    border: `1px solid ${hovered ? "rgba(110,168,254,0.25)" : "rgba(255,255,255,0.09)"}`,
-    color: "#a5c8fe",
-    transform: hovered ? "translateY(-2px)" : "none",
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={variant === "primary" ? primaryStyle : secondaryStyle}
-    >
-      {children}
-    </button>
-  );
-}
-
 // ─── Home Landing ─────────────────────────────────────────────────────────────
 
 function HomeLanding() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -198,7 +148,7 @@ function HomeLanding() {
       <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(30,60,120,0.35) 0%, transparent 70%)" }} />
       <div className="fixed z-0 pointer-events-none" style={{ bottom: "-15%", right: "-5%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(91,91,214,0.08) 0%, transparent 65%)" }} />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-24 space-y-20">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-24 space-y-20">
 
         {/* ── Hero ── */}
         <div style={{ textAlign: "center", maxWidth: "680px", margin: "0 auto" }} className="space-y-6">
@@ -234,23 +184,10 @@ function HomeLanding() {
             Anonymous salary data contributed by Sri Lanka&apos;s tech community.
             Submit without logging in, vote to verify, search to benchmark.
           </p>
-
-          {/* ── CTA buttons — same style as submit page ── */}
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", paddingTop: "8px" }}>
-            <CtaButton variant="secondary" onClick={() => router.push("/search")}>
-              <Search className="w-4 h-4" /> Search Salaries
-            </CtaButton>
-            <CtaButton variant="secondary" onClick={() => router.push("/submit")}>
-              <Send className="w-4 h-4" /> Submit Salary
-            </CtaButton>
-            <CtaButton variant="secondary" onClick={() => router.push("/stats")}>
-              <BarChart2 className="w-4 h-4" /> View Stats
-            </CtaButton>
-          </div>
         </div>
 
         {/* ── Stats strip ── */}
-        <div style={{
+        <div className="stats-grid" style={{
           display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
           gap: "1px", background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.07)",
@@ -342,11 +279,11 @@ function HomeLanding() {
         </div>
 
         {/* ── Footer ── */}
-        <div style={{ textAlign: "center", paddingTop: "8px" }}>
+        <footer style={{ textAlign: "center", paddingTop: "8px", paddingBottom: "24px" }}>
           <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
-            © 2026 watupa.lk · Privacy-first · Open data · Built for Sri Lanka&apos;s tech community
+            © 2026 watupa.lk · Privacy-first · Open data
           </p>
-        </div>
+        </footer>
 
       </div>
     </main>
@@ -365,6 +302,9 @@ export default function HomePage() {
         button, [role="button"], a, select { cursor: pointer !important; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(110,168,254,0.2); border-radius: 3px; }
+        @media (max-width: 640px) {
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       <Navbar />

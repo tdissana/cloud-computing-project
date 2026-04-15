@@ -229,7 +229,7 @@ export default function SubmitPage() {
       <div style={{ minHeight: "100vh", display: "flex", position: "relative", zIndex: 1 }}>
 
         {/* ── Left panel ── */}
-        <div className="left-panel" style={{ flex: "0 0 42%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 52px", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="left-panel" style={{ flex: "0 0 42%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px 52px 48px 24px", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
 
           <div>
             <p style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "11px", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "#6ea8fe", marginBottom: "18px" }}>Salary Submission</p>
@@ -262,11 +262,10 @@ export default function SubmitPage() {
               ))}
             </div>
           </div>
-          <p style={{ fontSize: "11px", color: "white", letterSpacing: "0.03em" }}>© {new Date().getFullYear()} watupa.lk · Privacy-first · Open data</p>
         </div>
 
         {/* ── Right panel ── */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 0 40px 24px" }}>
           <div style={{ width: "100%", maxWidth: "440px" }}>
 
             {submitted && result?.type === "success" ? (
@@ -355,6 +354,13 @@ export default function SubmitPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Footer ── */}
+      <footer style={{ textAlign: "center", padding: "24px 16px", position: "relative", zIndex: 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
+          © 2026 watupa.lk · Privacy-first · Open data
+        </p>
+      </footer>
 
       <style>{`@media (max-width: 820px) { .left-panel { display: none !important; } }`}</style>
     </>
