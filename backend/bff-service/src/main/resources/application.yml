@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8000
 
 spring:
   application:
@@ -9,15 +9,15 @@ spring:
 # Override these via environment variables in Docker / Kubernetes
 services:
   identity:
-    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8001}
   salary-submission:
-    url: ${SALARY_SUBMISSION_SERVICE_URL:http://localhost:8082}
+    url: ${SALARY_SUBMISSION_SERVICE_URL:http://localhost:8002}
   search:
-    url: ${SEARCH_SERVICE_URL:http://localhost:8083}
+    url: ${SEARCH_SERVICE_URL:http://localhost:8003}
   stats:
-    url: ${STATS_SERVICE_URL:http://localhost:8084}
+    url: ${STATS_SERVICE_URL:http://localhost:8004}
   vote:
-    url: ${VOTE_SERVICE_URL:http://localhost:8085}
+    url: ${VOTE_SERVICE_URL:http://localhost:8005}
 
 # ── CORS allowed origins (comma-separated list) ─────────────────────────
 cors:
