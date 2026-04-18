@@ -6,7 +6,7 @@ import { MapPin, Code, Lock, ThumbsUp, ThumbsDown } from "lucide-react";
 
 interface SalaryCardProps {
   salary: SalaryResultResponse;
-  onVote: (submissionId: string, voteType: "UP" | "DOWN") => void;
+  onVote: (submissionId: string, voteType: "UPVOTE" | "DOWNVOTE") => void;
   voting?: boolean;
 }
 
@@ -25,15 +25,32 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
                 {salary.jobTitle}
               </h3>
             </div>
-            {salary.anonymized && (
-              <Badge
-                variant="outline"
-                className="bg-[#a5c8fe]/10 text-[#a5c8fe] border-[#a5c8fe]/25 whitespace-nowrap flex items-center gap-1"
-              >
-                <Lock className="w-3 h-3" />
-                <span className="text-xs">Anonymized</span>
-              </Badge>
-            )}
+            <div className="flex flex-col gap-1 items-end">
+              {salary.status === "APPROVED" ? (
+                <Badge
+                  variant="outline"
+                  className="bg-green-500/20 text-green-400 border-green-500/40 whitespace-nowrap flex items-center gap-1"
+                >
+                  <span className="text-xs font-semibold">Verified</span>
+                </Badge>
+              ) : salary.status ? (
+                <Badge
+                  variant="outline"
+                  className="bg-red-500/20 text-red-400 border-red-500/40 whitespace-nowrap flex items-center gap-1"
+                >
+                  <span className="text-xs font-semibold">Unverified</span>
+                </Badge>
+              ) : null}
+              {salary.anonymized && (
+                <Badge
+                  variant="outline"
+                  className="bg-[#a5c8fe]/10 text-[#a5c8fe] border-[#a5c8fe]/25 whitespace-nowrap flex items-center gap-1"
+                >
+                  <Lock className="w-3 h-3" />
+                  <span className="text-xs">Anonymized</span>
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
@@ -105,9 +122,9 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
           <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
-              onClick={() => onVote(salary.id, "UP")}
+              onClick={() => onVote(salary.id, "UPVOTE")}
               disabled={voting}
-              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#a5c8fe] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#a5c8fe] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ThumbsUp className="w-3 h-3" />
               <span>Up Vote</span>
@@ -115,9 +132,9 @@ export function SalaryCard({ salary, onVote, voting = false }: SalaryCardProps) 
             </button>
             <button
               type="button"
-              onClick={() => onVote(salary.id, "DOWN")}
+              onClick={() => onVote(salary.id, "DOWNVOTE")}
               disabled={voting}
-              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#f2a5a5] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-1 rounded-md border border-white/[0.12] px-2 py-1 text-[#f2a5a5] hover:bg-white/[0.06] disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               <ThumbsDown className="w-3 h-3" />
               <span>Down Vote</span>

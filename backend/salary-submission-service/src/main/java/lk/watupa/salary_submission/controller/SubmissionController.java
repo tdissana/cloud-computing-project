@@ -12,25 +12,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/submissions")
 @RequiredArgsConstructor
 public class SubmissionController {
-    private final SubmissionService submissionService;
-    @PostMapping("/submit")
-    public ResponseEntity<?> submit(@Valid @RequestBody SubmissionRequest submissionRequest) {
 
-        UUID submissionId = submissionService.submit(
-                submissionRequest.getCompany(),
-                submissionRequest.getRole(),
-                submissionRequest.getExperienceLevel(),
-                submissionRequest.getCountry(),
-                submissionRequest.getBaseSalary(),
-                submissionRequest.getTotalCompensation(),
-                submissionRequest.getCurrency(),
-                submissionRequest.isAnonymize()
+    private final SubmissionService submissionService;
+
+    @PostMapping("/submit")
+    public ResponseEntity<?> submit(@Valid @RequestBody SubmissionRequest req) {
+
+        Long submissionId = submissionService.submit(
+                req.getCompanyName(),
+                req.getJobTitle(),
+                req.getExperienceLevel(),
+                req.getEmploymentType(),
+                req.getSeniority(),
+                req.getCountry(),
+                req.getCurrency(),
+                req.getTotalCompensation(),
+                req.getBaseSalary(),
+                req.getSkills(),
+                req.isAnonymize()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -28,6 +28,7 @@ import { LEVELS, COUNTRIES } from "@/lib/stats/constants";
 import { fmt, activeFilters } from "@/lib/stats/helpers";
 import { StatCard } from "@/components/stats/StatCard";
 import { SalaryStatsResponse, StatsFilters } from "@/types/stats";
+import { Navbar } from "@/components/shared/Navbar";
 
 /* ─── Main Page ──────────────────────────────────────────────────── */
 
@@ -88,6 +89,7 @@ export default function StatsPage() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        button, [role='button'], select { cursor: pointer !important; }
         .stats-spinner {
           display: inline-block;
           width: 14px;
@@ -119,17 +121,9 @@ export default function StatsPage() {
           style={{ bottom: "-15%", right: "-5%", width: "50vw", height: "50vw", borderRadius: "50%", background: "radial-gradient(circle, rgba(91,91,214,0.08) 0%, transparent 65%)" }}
         />
 
-        {/* ── Header ── */}
-        <div className="relative z-10 border-b border-white/[0.07] bg-[#0b0f1a]/80 backdrop-blur sticky top-0">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
-            <BarChart2 className="text-[#6ea8fe] w-5 h-5" />
-            <span className="font-bold text-[#e8edf5] tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Salary Statistics
-            </span>
-          </div>
-        </div>
+        <Navbar />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-10 space-y-10">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-10">
 
           {/* ── Hero ── */}
           <div className="space-y-2">
@@ -299,7 +293,7 @@ export default function StatsPage() {
 
           {/* ── Empty state (post-search) ── */}
           {searched && !loading && stats?.count === 0 && !error && (
-            <p className="text-[#4a5572] text-sm">No results for given filters.</p>
+            <p className="text-[#4a5572] text-sm">No results for given filter(s)</p>
           )}
 
           {/* ── Results ── */}
@@ -421,6 +415,13 @@ export default function StatsPage() {
             </div>
           )}
         </div>
+
+        {/* ── Footer ── */}
+        <footer className="text-center py-6 relative z-10" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
+            © 2026 watupa.lk · Privacy-first · Open data
+          </p>
+        </footer>
       </main>
     </>
   );

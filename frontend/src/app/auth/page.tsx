@@ -7,35 +7,9 @@ import { apiLogin } from "@/lib/identity/login";
 import { apiSignup } from "@/lib/identity/signup";
 import { FloatingInput } from "@/components/identity/FloatingInput";
 import { StrengthBar } from "@/components/identity/StrengthBar";
-
-// ─── Validation ───────────────────────────────────────────────────────────────
-
-function validateSignup(f: SignupRequest, confirm: string) {
-  const errs: Partial<SignupRequest> = {};
-  if (!f.username || f.username.length < 3 || f.username.length > 10)
-    errs.username = "Must be 3–10 characters";
-  if (!f.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email))
-    errs.email = "Enter a valid email address";
-  if (!f.password || f.password.length < 5 || f.password.length > 12)
-    errs.password = "Must be 5–12 characters";
-
-  if (f.password !== confirm) {
-    errs.password = "Passwords do not match";
-  }
-
-  return errs;
-}
-
-function validateLogin(f: LoginRequest) {
-  const errs: Partial<LoginRequest> = {};
-  if (!f.username || f.username.length < 3)
-    errs.username = "Must be 3–10 characters";
-  if (!f.password || f.password.length < 5)
-    errs.password = "Must be 5–12 characters";
-  return errs;
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+import { validateLogin, validateSignup } from "@/lib/identity/validations";
+import { AlertBox } from "@/components/identity/AlertBox";
+import { Navbar } from "@/components/shared/Navbar";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -170,7 +144,9 @@ export default function AuthPage() {
       const res = await apiLogin(loginForm);
       localStorage.setItem("auth_token", res.token);
       setLoginMsg({ type: "success", text: "Welcome back! Redirecting…" });
-      setTimeout(() => router.push("/"), 1200);
+      const redirectPath = sessionStorage.getItem("redirect_after_login");
+      sessionStorage.removeItem("redirect_after_login");
+      setTimeout(() => router.push(redirectPath || "/"), 1200);
     } catch (e) {
       setLoginMsg({ type: "error", text: (e as Error).message });
     } finally {
@@ -367,10 +343,13 @@ export default function AuthPage() {
         }}
       />
 
+      {/* Navbar */}
+      <Navbar />
+
       {/* Layout */}
       <div
         style={{
-          minHeight: "100vh",
+          minHeight: "calc(100vh - 57px)",
           display: "flex",
           position: "relative",
           zIndex: 1,
@@ -388,35 +367,6 @@ export default function AuthPage() {
           }}
           className="left-panel"
         >
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, #3b7ff5, #5b5bd6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "16px",
-              }}
-            >
-              💼
-            </div>
-            <span
-              style={{
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: "17px",
-                color: "#e8edf5",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              watupa<span style={{ color: "#6ea8fe" }}>.lk</span>
-            </span>
-          </div>
-
           {/* Hero text */}
           <div>
             <p
@@ -502,16 +452,7 @@ export default function AuthPage() {
             </div>
           </div>
 
-          {/* Footer */}
-          <p
-            style={{
-              fontSize: "11px",
-              color: "white",
-              letterSpacing: "0.03em",
-            }}
-          >
-            © {new Date().getFullYear()} watupa.lk · Privacy-first · Open data
-          </p>
+          <div />
         </div>
 
         {/* Right panel — auth form */}
@@ -525,40 +466,6 @@ export default function AuthPage() {
           }}
         >
           <div style={{ width: "100%", maxWidth: "400px" }}>
-            {/* Mobile logo (only shown when left panel is hidden) */}
-            <div
-              style={{ marginBottom: "32px", display: "none" }}
-              className="mobile-logo"
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <div
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "7px",
-                    background: "linear-gradient(135deg, #3b7ff5, #5b5bd6)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                  }}
-                >
-                  💼
-                </div>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "16px",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  watupa<span style={{ color: "#6ea8fe" }}>.lk</span>
-                </span>
-              </div>
-            </div>
-
             {/* Heading */}
             <div style={{ marginBottom: "28px" }}>
               <h2
@@ -839,44 +746,19 @@ export default function AuthPage() {
         </div>
       </div>
 
+      {/* ── Footer ── */}
+      <footer style={{ textAlign: "center", padding: "24px 16px", position: "relative", zIndex: 1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ fontSize: "11px", color: "#2e3a50", letterSpacing: "0.04em" }}>
+          © 2026 watupa.lk · Privacy-first · Open data
+        </p>
+      </footer>
+
       {/* Responsive: hide left panel on small screens */}
       <style>{`
         @media (max-width: 820px) {
           .left-panel { display: none !important; }
-          .mobile-logo { display: flex !important; }
         }
       `}</style>
     </>
-  );
-}
-
-// ─── AlertBox ─────────────────────────────────────────────────────────────────
-
-function AlertBox({ type, text }: { type: "success" | "error"; text: string }) {
-  const isSuccess = type === "success";
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "9px",
-        padding: "11px 13px",
-        borderRadius: "8px",
-        marginBottom: "16px",
-        fontSize: "12.5px",
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        background: isSuccess
-          ? "rgba(76,175,130,0.08)"
-          : "rgba(224,82,82,0.08)",
-        border: `1px solid ${isSuccess ? "rgba(76,175,130,0.25)" : "rgba(224,82,82,0.25)"}`,
-        color: isSuccess ? "#4caf82" : "#e05252",
-        lineHeight: 1.5,
-      }}
-    >
-      <span style={{ flexShrink: 0, marginTop: "1px" }}>
-        {isSuccess ? "✓" : "✕"}
-      </span>
-      <span>{text}</span>
-    </div>
   );
 }

@@ -1,8 +1,8 @@
 package lk.watupa.stats.service;
 
+import lk.watupa.stats.client.SalarySubmissionClient;
 import lk.watupa.stats.payload.SalaryStatsResponse;
-import lk.watupa.stats.model.Submission;
-import lk.watupa.stats.repository.SubmissionRepository;
+import lk.watupa.stats.payload.SubmissionDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatsService {
 
-    private final SubmissionRepository submissionRepository;
+    private final SalarySubmissionClient salarySubmissionClient;
 
     public SalaryStatsResponse getStats(String role, String company, String level, String country) {
 
-        List<Submission> submissions = submissionRepository.findApprovedByFilters(
+        List<SubmissionDto> submissions = salarySubmissionClient.getApprovedSubmissions(
                 role, company, level, country
         );
 
@@ -34,7 +34,7 @@ public class StatsService {
         }
 
         List<Double> salaries = submissions.stream()
-                .map(Submission::getSalaryAmount)
+                .map(SubmissionDto::totalCompensation)
                 .sorted()
                 .toList();
 
@@ -49,7 +49,6 @@ public class StatsService {
                 .p90(computePercentile(salaries, 90))
                 .build();
     }
-
 
     private double computeAverage(List<Double> sorted) {
         return sorted.stream()
@@ -67,7 +66,6 @@ public class StatsService {
 
         if (lower == upper) return sorted.get(lower);
 
-        // Linear interpolation between neighbours
         double fraction = index - lower;
         return sorted.get(lower) + fraction * (sorted.get(upper) - sorted.get(lower));
     }

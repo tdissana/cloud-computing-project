@@ -87,7 +87,7 @@ export function SearchableSelect({
 
       {/* Dropdown Menu */}
       {isOpen && filteredOptions.length > 0 && (
-        <Card className="absolute z-50 w-full mt-1 bg-[#0f1524] border-white/[0.08] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+        <Card className="absolute w-full mt-1 bg-[#0f1524] border-white/[0.08] backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]" style={{ zIndex: 9999 }}>
           <div className="max-h-60 overflow-y-auto">
             {filteredOptions.map((option) => (
               <button
@@ -108,7 +108,7 @@ export function SearchableSelect({
 
       {/* No results message */}
       {isOpen && inputValue && filteredOptions.length === 0 && (
-        <Card className="absolute z-50 w-full mt-1 bg-[#0f1524] border-white/[0.08] backdrop-blur-xl">
+        <Card className="absolute w-full mt-1 bg-[#0f1524] border-white/[0.08] backdrop-blur-xl" style={{ zIndex: 9999 }}>
           <div className="px-3 py-3 text-sm text-[#4a5572] text-center">
             No matches found. Press Enter to use &quot;{inputValue}&quot;
           </div>

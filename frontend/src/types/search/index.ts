@@ -11,6 +11,8 @@ export interface SalarySearchFilters {
   size?: number;
   sortBy?: string;
   sortDir?: string;
+  /** VERIFIED = approved only; UNVERIFIED = pending/rejected (not approved); BOTH = all statuses. */
+  verificationStatus?: "VERIFIED" | "UNVERIFIED" | "BOTH";
 }
 
 export interface SalaryResultResponse {
@@ -30,6 +32,7 @@ export interface SalaryResultResponse {
   approvedAt: string;
   upvotes: number;
   downvotes: number;
+  status?: string;  // APPROVED, PENDING, REJECTED
 }
 
 export interface PagedResponse<T> {

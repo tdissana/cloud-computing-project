@@ -1,119 +1,153 @@
 package lk.watupa.search.service;
 
+import lk.watupa.search.client.SalarySubmissionClient;
+import lk.watupa.search.client.VoteClient;
 import lk.watupa.search.payload.*;
-import lk.watupa.search.model.ApprovedSalary;
-import lk.watupa.search.repository.SalarySearchRepository;
-import lk.watupa.search.repository.SalarySpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class SearchService {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int MAX_PAGE_SIZE = 100;
-    private static final Set<String> SORTABLE_FIELDS = Set.of(
-            "grossMonthlySalary", "yearsOfExperience", "approvedAt", "upvotes"
+    private static final List<String> EMPLOYMENT_TYPES = List.of(
+            "Full-time", "Part-time", "Contract", "Freelance"
     );
 
-    private final SalarySearchRepository repository;
+    private static final DateTimeFormatter APPROVED_AT_FMT =
+            DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
-    /**
-     * Execute a filtered, paginated salary search.
-     * Anonymized records have company name and city masked in the response.
-     */
+    private final SalarySubmissionClient salarySubmissionClient;
+    private final VoteClient voteClient;
+
     public PagedResponse<SalaryResultResponse> search(SalarySearchRequest request) {
-        Pageable pageable = buildPageable(request);
-        Page<ApprovedSalary> page = repository.findAll(
-                SalarySpecification.fromRequest(request), pageable);
+        OwnerPagedDto<SubmissionDto> pagedResult = salarySubmissionClient.search(request);
 
-        List<SalaryResultResponse> dtos = page.getContent().stream()
-                .map(this::toDto)
+        List<SubmissionDto> rows = pagedResult.content();
+        List<String> idStrings = rows.stream()
+                .map(s -> String.valueOf(s.id()))
                 .toList();
 
-        log.info("Search returned {} results (page {}/{})",
-                dtos.size(), page.getNumber(), page.getTotalPages());
+        Map<String, VoteCountDto> votesById = voteClient.getVoteCounts(idStrings).stream()
+                .collect(Collectors.toMap(VoteCountDto::submissionId, v -> v, (a, b) -> a));
+
+        List<SalaryResultResponse> dtos = rows.stream()
+                .map(s -> toDto(s, votesById.get(String.valueOf(s.id()))))
+                .toList();
+
+        List<SalaryResultResponse> sortedDtos = sortResults(dtos, request);
+
+        log.info("Search returned {} results (page {}/{}) verificationStatus={}",
+                sortedDtos.size(), pagedResult.page(), pagedResult.totalPages(),
+                request.getVerificationStatus());
 
         return PagedResponse.<SalaryResultResponse>builder()
-                .content(dtos)
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
+                .content(sortedDtos)
+                .page(pagedResult.page())
+                .size(pagedResult.size())
+                .totalElements(pagedResult.totalElements())
+                .totalPages(pagedResult.totalPages())
+                .last(pagedResult.last())
                 .build();
     }
 
-    /**
-     * Return distinct filter values so the frontend can populate dropdowns.
-     */
     public FilterOptionsResponse getFilterOptions() {
+        OwnerFilterOptionsDto opts = salarySubmissionClient.getFilterOptions();
         return FilterOptionsResponse.builder()
-                .countries(repository.findDistinctCountries())
-                .companies(repository.findDistinctCompanies())
-                .jobTitles(repository.findDistinctJobTitles())
-                .seniorityLevels(repository.findDistinctSeniorityLevels())
-                .employmentTypes(repository.findDistinctEmploymentTypes())
-                .currencies(repository.findDistinctCurrencies())
+                .countries(opts.countries())
+                .companies(opts.companies())
+                .jobTitles(opts.jobTitles())
+                .seniorityLevels(opts.experienceLevels())
+                .employmentTypes(EMPLOYMENT_TYPES)
+                .currencies(opts.currencies())
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // Mapping helpers
-    // -------------------------------------------------------------------------
+    private SalaryResultResponse toDto(SubmissionDto s, VoteCountDto vote) {
+        boolean anon = Boolean.TRUE.equals(s.anonymize());
+        int up = vote != null ? vote.upvoteCount() : 0;
+        int down = vote != null ? vote.downvoteCount() : 0;
 
-    /**
-     * Map entity to DTO and apply anonymization masking.
-     * When anonymized=true:  companyName → "Anonymous", city → null
-     */
-    private SalaryResultResponse toDto(ApprovedSalary salary) {
-        boolean anon = Boolean.TRUE.equals(salary.getAnonymized());
+        Double gross = s.baseSalary();
+        Double additional = null;
+        if (s.totalCompensation() != null && s.baseSalary() != null) {
+            double diff = s.totalCompensation() - s.baseSalary();
+            if (diff > 0) {
+                additional = diff;
+            }
+        }
+
+        String approvedAt = s.timestamp() == null
+                ? null
+                : APPROVED_AT_FMT.format(s.timestamp().atOffset(ZoneOffset.UTC));
+
+        String level = s.experienceLevel() == null
+                ? ""
+                : titleCaseWord(s.experienceLevel());
+
         return SalaryResultResponse.builder()
-                .id(salary.getId())
-                .companyName(anon ? "Anonymous" : salary.getCompanyName())
-                .jobTitle(salary.getJobTitle())
-                .seniorityLevel(salary.getSeniorityLevel())
-                .employmentType(salary.getEmploymentType())
-                .country(salary.getCountry())
-                .city(anon ? null : salary.getCity())
-                .grossMonthlySalary(salary.getGrossMonthlySalary())
-                .currency(salary.getCurrency())
-                .additionalCompensation(salary.getAdditionalCompensation())
-                .yearsOfExperience(salary.getYearsOfExperience())
-                .techStack(salary.getTechStack())
+                .id(String.valueOf(s.id()))
+                .companyName(anon ? "Anonymous" : s.companyName())
+                .jobTitle(s.jobTitle())
+                .seniorityLevel(level)
+                .employmentType(s.employmentType() != null ? formatEmploymentType(s.employmentType()) : "Full-time")
+                .country(s.country())
+                .city(anon ? null : null)
+                .grossMonthlySalary(gross)
+                .currency(s.currency())
+                .additionalCompensation(additional)
+                .yearsOfExperience(s.seniority())
+                .techStack(s.skills() != null ? s.skills() : "")
                 .anonymized(anon)
-                .approvedAt(salary.getApprovedAt())
-                .upvotes(salary.getUpvotes())
-                .downvotes(salary.getDownvotes())
+                .approvedAt(approvedAt != null ? approvedAt : "")
+                .upvotes(up)
+                .downvotes(down)
+                .status(s.status())
                 .build();
     }
 
-    private Pageable buildPageable(SalarySearchRequest req) {
-        int page = (req.getPage() != null && req.getPage() >= 0) ? req.getPage() : 0;
-        int size = (req.getSize() != null && req.getSize() > 0)
-                ? Math.min(req.getSize(), MAX_PAGE_SIZE)
-                : DEFAULT_PAGE_SIZE;
+    private static String titleCaseWord(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        return Character.toUpperCase(raw.charAt(0)) + raw.substring(1).toLowerCase();
+    }
 
-        String sortField = (req.getSortBy() != null && SORTABLE_FIELDS.contains(req.getSortBy()))
-                ? req.getSortBy()
-                : "approvedAt";
+    private static String formatEmploymentType(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        return switch (raw) {
+            case "FullTime" -> "Full-time";
+            case "PartTime" -> "Part-time";
+            default -> raw;
+        };
+    }
 
-        Sort.Direction dir = "asc".equalsIgnoreCase(req.getSortDir())
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
+    private List<SalaryResultResponse> sortResults(List<SalaryResultResponse> dtos, SalarySearchRequest request) {
+        String sortBy = request.getSortBy();
+        if (sortBy == null) {
+            return dtos;
+        }
 
-        return PageRequest.of(page, size, Sort.by(dir, sortField));
+        String sortField = sortBy.toLowerCase();
+        boolean ascending = "asc".equalsIgnoreCase(request.getSortDir());
+
+        return dtos.stream()
+                .sorted((a, b) -> {
+                    int compare = switch (sortField) {
+                        case "upvotes" -> Integer.compare(a.getUpvotes(), b.getUpvotes());
+                        case "downvotes" -> Integer.compare(a.getDownvotes(), b.getDownvotes());
+                        default -> 0;
+                    };
+                    return ascending ? compare : -compare;
+                })
+                .toList();
     }
 }

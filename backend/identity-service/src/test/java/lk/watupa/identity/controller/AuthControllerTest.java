@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lk.watupa.identity.payload.SignupRequest;
 import lk.watupa.identity.payload.SignupResponse;
 import lk.watupa.identity.service.AuthService;
+import lk.watupa.identity.service.JWTService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private JWTService jwtService;
 
     @Autowired
     private ObjectMapper objectMapper;

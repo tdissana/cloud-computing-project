@@ -6,14 +6,7 @@ import {
   FilterOptionsResponse,
 } from "@/types/search";
 
-function resolveBffBase(): string {
-  const rawBase = process.env.NEXT_PUBLIC_BFF_URL?.trim();
-  if (!rawBase) return "/bff";
-  if (rawBase.endsWith("/bff")) return rawBase;
-  return `${rawBase}/bff`;
-}
-
-const BFF_BASE = resolveBffBase();
+const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL ?? "/bff";
 
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (payload && typeof payload === "object" && "error" in payload) {
@@ -43,6 +36,10 @@ export async function searchSalaries(
   if (filters.minExperience !== undefined) body.minExperience = filters.minExperience;
   if (filters.maxExperience !== undefined) body.maxExperience = filters.maxExperience;
 
+  if (filters.verificationStatus) {
+    body.verificationStatus = filters.verificationStatus;
+  }
+
   // Pagination
   body.page = filters.page ?? 0;
   body.size = filters.size ?? 20;
@@ -52,7 +49,7 @@ export async function searchSalaries(
   body.sortDir = filters.sortDir ?? "desc";
 
   try {
-    const res = await fetch(`${BFF_BASE}/api/search/salaries`, {
+    const res = await fetch(`${BFF_URL}/api/search/salaries`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +84,7 @@ export async function fetchFilterOptions(): Promise<
   APIResponse<FilterOptionsResponse>
 > {
   try {
-    const res = await fetch(`${BFF_BASE}/api/search/filters`);
+    const res = await fetch(`${BFF_URL}/api/search/filters`);
     const payload: APIResponse<FilterOptionsResponse> = await res
       .json()
       .catch(() => ({ success: false, error: `Server error: ${res.status}` }));
@@ -110,7 +107,7 @@ export async function fetchFilterOptions(): Promise<
 
 export async function voteSubmission(
   submissionId: string,
-  voteType: "UP" | "DOWN"
+  voteType: "UPVOTE" | "DOWNVOTE"
 ): Promise<APIResponse<unknown>> {
   try {
     const token =
@@ -119,11 +116,11 @@ export async function voteSubmission(
     if (!token) {
       return {
         success: false,
-        error: "Please log in to vote.",
+        error: "__AUTH_REQUIRED__",
       };
     }
 
-    const res = await fetch(`${BFF_BASE}/api/votes`, {
+    const res = await fetch(`${BFF_URL}/api/votes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -131,6 +128,13 @@ export async function voteSubmission(
       },
       body: JSON.stringify({ submissionId, voteType }),
     });
+
+    if (res.status === 401) {
+      return {
+        success: false,
+        error: "__AUTH_REQUIRED__",
+      };
+    }
 
     const payload: APIResponse<unknown> = await res
       .json()

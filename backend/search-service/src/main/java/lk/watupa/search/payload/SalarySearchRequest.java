@@ -1,13 +1,16 @@
 package lk.watupa.search.payload;
 
-import jakarta.validation.constraints.Min;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
-import lk.watupa.search.validation.*;
+import lk.watupa.search.validation.ValidSeniorityLevel;
+import lk.watupa.search.validation.ValidSortDirection;
+import lk.watupa.search.validation.ValidSortField;
+import lk.watupa.search.validation.ValidVerificationStatus;
 
 /**
- * Query parameters for salary search. All fields are optional — omit to skip that filter.
- * All enum-like fields accept case-insensitive values (e.g., "Mid" = "mid" = "MID").
+ * Query parameters for salary search. All fields are optional.
  */
 @Data
 public class SalarySearchRequest {
@@ -16,19 +19,20 @@ public class SalarySearchRequest {
     private String jobTitle;
 
     @ValidSeniorityLevel
-    private String seniorityLevel;
+    @JsonAlias("seniorityLevel")
+    private String experienceLevel;
 
-    @ValidEmploymentType
     private String employmentType;
 
-    @ValidCurrency
     private String currency;
 
     @Min(0)
-    private Integer minExperience;
+    @JsonAlias("minExperience")
+    private Integer minSeniority;
 
     @Max(80)
-    private Integer maxExperience;
+    @JsonAlias("maxExperience")
+    private Integer maxSeniority;
 
     @Min(0)
     private Integer page;
@@ -38,8 +42,14 @@ public class SalarySearchRequest {
     private Integer size;
 
     @ValidSortField
-    private String sortBy;   // e.g. "grossMonthlySalary", "approvedAt"
+    private String sortBy;
 
     @ValidSortDirection
-    private String sortDir;  // "asc" or "desc"
+    private String sortDir;
+
+    /**
+     * VERIFIED = approved submissions only; UNVERIFIED = not approved (e.g. pending/rejected).
+     */
+    @ValidVerificationStatus
+    private String verificationStatus;
 }

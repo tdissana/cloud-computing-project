@@ -17,5 +17,7 @@ public class VoteResponse {
     private Long userId;
     private VoteType voteType;
     private LocalDateTime createdAt;
+    private int upvoteCount;
+    private int downvoteCount;
 }
 
