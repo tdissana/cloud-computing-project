@@ -1,0 +1,158 @@
+---
+# ── PersistentVolumeClaim ─────────────────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # minikube uses 'standard' storage class by default
+  storageClassName: standard
+
+---
+# ── ConfigMap with init SQL ───────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: data
+data:
+  001_init.sql: |
+    -- identity schema
+    CREATE SCHEMA IF NOT EXISTS identity;
+
+    CREATE TABLE IF NOT EXISTS identity.users (
+        user_id  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        username VARCHAR(20)  NOT NULL,
+        email    VARCHAR(50)  NOT NULL,
+        password VARCHAR(120) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT uk_users_username UNIQUE (username),
+        CONSTRAINT uk_users_email    UNIQUE (email)
+    );
+
+    -- salary schema
+    CREATE SCHEMA IF NOT EXISTS salary;
+
+    CREATE TABLE IF NOT EXISTS salary.submission (
+        id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        company_name       VARCHAR(255),
+        job_title          VARCHAR(255),
+        experience_level   VARCHAR(50),
+        employment_type    VARCHAR(50),
+        seniority          INT,
+        country            VARCHAR(100) DEFAULT 'Sri Lanka',
+        currency           VARCHAR(10)  DEFAULT 'LKR',
+        total_compensation DOUBLE PRECISION,
+        base_salary        DOUBLE PRECISION,
+        skills             TEXT,
+        anonymize          BOOLEAN      DEFAULT TRUE,
+        status             VARCHAR(20)  DEFAULT 'PENDING',
+        timestamp          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- community schema
+    CREATE SCHEMA IF NOT EXISTS community;
+
+    CREATE TABLE IF NOT EXISTS community.votes (
+        id            BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        submission_id BIGINT      NOT NULL,
+        user_id       BIGINT      NOT NULL,
+        vote_type     VARCHAR(10) NOT NULL CHECK (vote_type IN ('UPVOTE', 'DOWNVOTE')),
+        created_at    TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT uk_votes_submission_user UNIQUE (submission_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS community.vote_counts (
+        submission_id  BIGINT    PRIMARY KEY,
+        upvote_count   BIGINT    NOT NULL DEFAULT 0,
+        downvote_count BIGINT    NOT NULL DEFAULT 0,
+        updated_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+---
+# ── Deployment ────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: data
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    type: Recreate       # Required for ReadWriteOnce PVC
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+              subPath: pgdata
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "watupa", "-d", "techsalary"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "watupa"]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: init-sql
+          configMap:
+            name: postgres-init-sql
+
+---
+# ── ClusterIP Service ─────────────────────────────────────────────────────────
+# Only reachable inside the cluster. DNS: postgres-service.data.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: data
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP

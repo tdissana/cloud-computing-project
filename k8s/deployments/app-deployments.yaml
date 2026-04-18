@@ -1,0 +1,461 @@
+---
+# ═══════════════════════════════════════════════════════════
+#  IDENTITY SERVICE  (port 8001)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+  namespace: app
+  labels:
+    app: identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-service
+  template:
+    metadata:
+      labels:
+        app: identity-service
+    spec:
+      containers:
+        - name: identity-service
+          image: watupa/identity-service:latest
+          imagePullPolicy: Never          # use locally built image in minikube
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8001
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: app
+spec:
+  selector:
+    app: identity-service
+  ports:
+    - port: 8001
+      targetPort: 8001
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  SALARY SUBMISSION SERVICE  (port 8002)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salary-submission-service
+  namespace: app
+  labels:
+    app: salary-submission-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: salary-submission-service
+  template:
+    metadata:
+      labels:
+        app: salary-submission-service
+    spec:
+      containers:
+        - name: salary-submission-service
+          image: watupa/salary-submission-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8002
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salary-submission-service
+  namespace: app
+spec:
+  selector:
+    app: salary-submission-service
+  ports:
+    - port: 8002
+      targetPort: 8002
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  SEARCH SERVICE  (port 8003)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-service
+  namespace: app
+  labels:
+    app: search-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search-service
+  template:
+    metadata:
+      labels:
+        app: search-service
+    spec:
+      containers:
+        - name: search-service
+          image: watupa/search-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8003
+          env:
+            - name: SALARY_SUBMISSION_SERVICE_URL
+              value: "http://salary-submission-service:8002"
+            - name: VOTE_SERVICE_URL
+              value: "http://vote-service:8005"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8003
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8003
+            initialDelaySeconds: 40
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search-service
+  namespace: app
+spec:
+  selector:
+    app: search-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  STATS SERVICE  (port 8004)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats-service
+  namespace: app
+  labels:
+    app: stats-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stats-service
+  template:
+    metadata:
+      labels:
+        app: stats-service
+    spec:
+      containers:
+        - name: stats-service
+          image: watupa/stats-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8004
+          env:
+            - name: SALARY_SUBMISSION_SERVICE_URL
+              value: "http://salary-submission-service:8002"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8004
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8004
+            initialDelaySeconds: 40
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stats-service
+  namespace: app
+spec:
+  selector:
+    app: stats-service
+  ports:
+    - port: 8004
+      targetPort: 8004
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  VOTE SERVICE  (port 8005)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote-service
+  namespace: app
+  labels:
+    app: vote-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vote-service
+  template:
+    metadata:
+      labels:
+        app: vote-service
+    spec:
+      containers:
+        - name: vote-service
+          image: watupa/vote-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8005
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: SALARY_SUBMISSION_SERVICE_URL
+              value: "http://salary-submission-service:8002"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8005
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8005
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote-service
+  namespace: app
+spec:
+  selector:
+    app: vote-service
+  ports:
+    - port: 8005
+      targetPort: 8005
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  BFF SERVICE  (port 8000)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-service
+  namespace: app
+  labels:
+    app: bff-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bff-service
+  template:
+    metadata:
+      labels:
+        app: bff-service
+    spec:
+      containers:
+        - name: bff-service
+          image: watupa/bff-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: app-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8000
+            initialDelaySeconds: 40
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-service
+  namespace: app
+spec:
+  selector:
+    app: bff-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+# ═══════════════════════════════════════════════════════════
+#  FRONTEND SERVICE  (port 3000)
+# ═══════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: app
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: watupa/frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_BFF_URL
+              value: "http://bff-service:8000/bff"
+            - name: NEXT_PUBLIC_API_URL
+              value: "http://bff-service:8000"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 40
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: app
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
