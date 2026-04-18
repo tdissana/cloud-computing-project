@@ -33,7 +33,7 @@ public class VoteService {
     private int voteApprovalThreshold;
 
     @Transactional
-    public VoteResponse castVote(Long submissionId, Long userId, VoteType voteType) {
+    public VoteResponse castVote(UUID submissionId, Long userId, VoteType voteType) {
         log.info("User {} casting {} on submission {}", userId, voteType, submissionId);
 
         Vote existingVote = voteRepository.findBySubmissionIdAndUserIdForUpdate(submissionId, userId)
