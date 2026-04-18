@@ -98,21 +98,28 @@ export function SearchPageContent({ verificationStatus: initialStatus }: SearchP
       sessionStorage.removeItem("search_state");
       try {
         const state = JSON.parse(saved);
-        if (state.draft) setDraft(state.draft);
-        if (state.verificationStatus) setVerificationStatus(state.verificationStatus);
+        if (state.draft || state.verificationStatus) {
+          queueMicrotask(() => {
+            if (state.draft) setDraft(state.draft);
+            if (state.verificationStatus) setVerificationStatus(state.verificationStatus);
+          });
+        }
         if (state.filters) {
           const restoredFilters = state.filters as SalarySearchFilters;
-          setFilters(restoredFilters);
-          setSearched(true);
-          // Re-run the search with restored filters
-          (async () => {
-            setLoading(true);
-            const result = await searchSalaries(restoredFilters);
-            if (result.success && result.data) {
-              setResults(result.data);
-            }
-            setLoading(false);
-          })();
+
+          queueMicrotask(() => {
+            setFilters(restoredFilters);
+            setSearched(true);
+
+            (async () => {
+              setLoading(true);
+              const result = await searchSalaries(restoredFilters);
+              if (result.success && result.data) {
+                setResults(result.data);
+              }
+              setLoading(false);
+            })();
+          });
         }
       } catch {
         // ignore corrupt state
