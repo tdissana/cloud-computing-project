@@ -1,0 +1,28 @@
+# ── Stage 1: Build ───────────────────────────────────────────────────
+FROM eclipse-temurin:21-jdk-alpine AS builder
+WORKDIR /build
+
+# Copy Maven wrapper and pom first (layer caching)
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
+
+# Copy source and build (skip tests — tests run in CI)
+COPY src/ src/
+RUN ./mvnw package -DskipTests -q
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Non-root user for security
+RUN addgroup -S watupa && adduser -S watupa -G watupa
+USER watupa
+
+COPY --from=builder /build/target/*.jar app.jar
+
+# JVM tuning for 1 GiB node: limit heap, reduce metaspace
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=60.0 -XX:+UseContainerSupport -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=128m"
+
+EXPOSE 8081
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

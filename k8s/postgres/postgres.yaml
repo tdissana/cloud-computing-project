@@ -1,0 +1,203 @@
+# ── PersistentVolumeClaim ────────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path      # k3s built-in provisioner
+  resources:
+    requests:
+      storage: 3Gi
+---
+# ── ConfigMap: init SQL injected as a volume ─────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: data
+data:
+  001_init.sql: |
+    -- ================================================================
+    -- Watupa-LK  —  PostgreSQL schema initialisation
+    -- ================================================================
+
+    -- Schemas
+    CREATE SCHEMA IF NOT EXISTS identity;
+    CREATE SCHEMA IF NOT EXISTS salary;
+    CREATE SCHEMA IF NOT EXISTS community;
+
+    -- ── IDENTITY SCHEMA ──────────────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS identity.users (
+        id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        email         TEXT        UNIQUE NOT NULL,
+        password_hash TEXT        NOT NULL,          -- bcrypt only
+        created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS identity.refresh_tokens (
+        id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id     UUID        NOT NULL REFERENCES identity.users(id) ON DELETE CASCADE,
+        token_hash  TEXT        NOT NULL UNIQUE,
+        expires_at  TIMESTAMPTZ NOT NULL,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    -- ── SALARY SCHEMA ────────────────────────────────────────────────
+    -- NOTE: No email column — salary records are fully anonymous
+    CREATE TABLE IF NOT EXISTS salary.submissions (
+        id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        job_title         TEXT        NOT NULL,
+        company           TEXT        NOT NULL,
+        country           TEXT        NOT NULL DEFAULT 'LK',
+        city              TEXT,
+        employment_type   TEXT        NOT NULL,   -- FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
+        experience_level  TEXT        NOT NULL,   -- JUNIOR | MID | SENIOR | LEAD | PRINCIPAL
+        years_experience  INT,
+        total_compensation NUMERIC(15,2) NOT NULL,
+        base_salary       NUMERIC(15,2),
+        currency          TEXT        NOT NULL DEFAULT 'LKR',
+        anonymize         BOOLEAN     NOT NULL DEFAULT true,
+        status            TEXT        NOT NULL DEFAULT 'PENDING',  -- PENDING | APPROVED | REJECTED
+        submitted_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    -- Index for search service queries
+    CREATE INDEX IF NOT EXISTS idx_submissions_status
+        ON salary.submissions(status);
+    CREATE INDEX IF NOT EXISTS idx_submissions_country_role
+        ON salary.submissions(country, job_title, status);
+    CREATE INDEX IF NOT EXISTS idx_submissions_company
+        ON salary.submissions(company, status);
+
+    -- ── COMMUNITY SCHEMA ─────────────────────────────────────────────
+    CREATE TABLE IF NOT EXISTS community.votes (
+        id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        submission_id  UUID        NOT NULL REFERENCES salary.submissions(id) ON DELETE CASCADE,
+        user_id        UUID        NOT NULL,    -- references identity.users(id) by value only
+        vote_type      TEXT        NOT NULL,   -- UP | DOWN
+        voted_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE(submission_id, user_id)          -- one vote per user per submission
+    );
+
+    CREATE TABLE IF NOT EXISTS community.vote_counts (
+        submission_id  UUID    PRIMARY KEY REFERENCES salary.submissions(id) ON DELETE CASCADE,
+        up_votes       INT     NOT NULL DEFAULT 0,
+        down_votes     INT     NOT NULL DEFAULT 0,
+        updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS community.reports (
+        id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+        submission_id UUID        NOT NULL REFERENCES salary.submissions(id) ON DELETE CASCADE,
+        user_id       UUID        NOT NULL,
+        reason        TEXT        NOT NULL,
+        reported_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    -- ── Grant permissions ────────────────────────────────────────────
+    GRANT USAGE  ON SCHEMA identity  TO watupa_user;
+    GRANT USAGE  ON SCHEMA salary    TO watupa_user;
+    GRANT USAGE  ON SCHEMA community TO watupa_user;
+
+    GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA identity  TO watupa_user;
+    GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA salary    TO watupa_user;
+    GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA community TO watupa_user;
+
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA identity  TO watupa_user;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA salary    TO watupa_user;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA community TO watupa_user;
+
+    ALTER DEFAULT PRIVILEGES IN SCHEMA identity  GRANT ALL ON TABLES    TO watupa_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA salary    GRANT ALL ON TABLES    TO watupa_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA community GRANT ALL ON TABLES    TO watupa_user;
+---
+# ── Deployment ───────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: data
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "watupa_user", "-d", "watupa"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "watupa_user", "-d", "watupa"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: init-sql
+          configMap:
+            name: postgres-init
+---
+# ── ClusterIP Service ─────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-svc
+  namespace: data
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
