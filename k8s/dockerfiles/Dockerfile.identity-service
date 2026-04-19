@@ -1,17 +1,31 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM maven:3.9.6-eclipse-temurin-21 AS builder
+FROM --platform=linux/amd64 maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -q
-COPY src ./src
-RUN mvn clean package -DskipTests -q
+
+# Copy parent POM
+COPY pom.xml ./pom.xml
+
+# Copy ALL sibling module POMs so the parent can resolve its module list
+COPY bff-service/pom.xml                ./bff-service/pom.xml
+COPY identity-service/pom.xml           ./identity-service/pom.xml
+COPY salary-submission-service/pom.xml  ./salary-submission-service/pom.xml
+COPY search-service/pom.xml             ./search-service/pom.xml
+COPY stats-service/pom.xml              ./stats-service/pom.xml
+COPY vote-service/pom.xml               ./vote-service/pom.xml
+
+# Pre-download dependencies for this service only
+RUN mvn dependency:go-offline -pl identity-service --also-make -q
+
+# Copy only this service's source and build
+COPY identity-service/src ./identity-service/src
+RUN mvn clean package -pl identity-service --also-make -DskipTests -q
 
 # ── Stage 2: Run ──────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jre-alpine
+FROM --platform=linux/amd64 eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder /app/identity-service/target/*.jar app.jar
 EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -qO- http://localhost:8001/actuator/health || exit 1

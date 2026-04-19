@@ -1,115 +1,82 @@
-# watupa.lk — Minikube Deployment Guide (Azure VM)
+# watupa.lk — Local Minikube Deployment Guide (Windows)
 
-Complete step-by-step guide to deploy the watupa.lk microservices platform
-on a single-node Kubernetes cluster using Minikube on an Azure VM.
+**Run Minikube locally on Windows.**
 
----
-
-## Architecture Overview
-
-```
-Internet
-    │
-    ▼
-Azure VM (Public IP)
-    │  port 80 (nginx ingress via NodePort)
-    ▼
-Minikube (single-node k8s)
-    │
-    ├── ingress-nginx namespace
-    │     └── Ingress controller
-    │           ├── /bff/*  → bff-service:8000
-    │           └── /*      → frontend-service:3000
-    │
-    ├── app namespace
-    │     ├── frontend          :3000
-    │     ├── bff-service       :8000
-    │     ├── identity-service  :8001
-    │     ├── salary-submission :8002
-    │     ├── search-service    :8003
-    │     ├── stats-service     :8004
-    │     └── vote-service      :8005
-    │
-    └── data namespace
-          └── postgres          :5432  (PVC: 5Gi)
-```
+Your Windows machine needs:
+- 8 GB RAM minimum (16 GB recommended)
+- 4 CPU cores
+- 20 GB free disk space
+- Windows 10/11 64-bit
 
 ---
 
-## Prerequisites on Azure VM
+## Prerequisites — Install on Windows
 
-### 1. Create Azure VM
-- **OS**: Ubuntu 22.04 LTS
-- **Size**: Standard_D4s_v3 (4 vCPUs, 16GB RAM) or larger
-- **Disk**: 64GB minimum
-- **Networking**: Open inbound ports: 22 (SSH), 80 (HTTP), 443 (HTTPS)
+### 1. Install Docker Desktop
+Download from: https://www.docker.com/products/docker-desktop/
 
-### 2. SSH into your VM
-```bash
-ssh azureuser@<YOUR_VM_PUBLIC_IP>
-```
+During install:
+- ✅ Enable WSL 2 backend (recommended)
+- ✅ Add Docker to PATH
 
-### 3. Install Docker
-```bash
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg
+After install, open Docker Desktop and wait for it to start (green icon).
 
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-echo "deb [arch=$(dpkg --print-architecture) \
-  signed-by=/etc/apt/keyrings/docker.gpg] \
-  https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-# Add your user to docker group (re-login required after this)
-sudo usermod -aG docker $USER
-newgrp docker
+### 2. Install kubectl
+Open **PowerShell as Administrator** and run:
+```powershell
+# Using winget (Windows Package Manager)
+winget install -e --id Kubernetes.kubectl
 
 # Verify
-docker --version
-```
-
-### 4. Install kubectl
-```bash
-curl -LO "https://dl.k8s.io/release/$(curl -sL \
-  https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 kubectl version --client
 ```
 
-### 5. Install Minikube
-```bash
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
+Or download manually from:
+https://dl.k8s.io/release/v1.30.0/bin/windows/amd64/kubectl.exe
+→ place in `C:\Windows\System32\`
+
+### 3. Install Minikube
+```powershell
+# Using winget
+winget install -e --id Kubernetes.minikube
+
+# Verify
 minikube version
 ```
 
-### 6. Install Java 21 & Maven (for building backend)
-```bash
-sudo apt-get install -y openjdk-21-jdk maven
-java -version
-mvn -version
+Or download from: https://minikube.sigs.k8s.io/docs/start/
+→ Run the `.exe` installer
+
+### 4. Install Java 21 (for building backend)
+Download from: https://adoptium.net/temurin/releases/?version=21
+→ Install the `.msi` package, tick "Set JAVA_HOME"
+
+```powershell
+java -version   # should show openjdk 21
+mvn -version    # should show Maven 3.x
 ```
 
-### 7. Install Node.js 20 (for building frontend)
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-node -v
-npm -v
+### 5. Install Node.js 20 (for building frontend)
+Download from: https://nodejs.org/en/download
+→ Install the LTS Windows Installer (.msi)
+
+```powershell
+node -v    # v20.x.x
+npm -v     # 10.x.x
+```
+
+### 6. Install Git (if not already installed)
+```powershell
+winget install -e --id Git.Git
 ```
 
 ---
 
 ## Step 1 — Clone the Repository
 
-```bash
+Open **PowerShell** (normal user, not admin) and run:
+
+```powershell
 git clone <YOUR_REPO_URL> watupa-lk
 cd watupa-lk
 ```
@@ -118,108 +85,130 @@ cd watupa-lk
 
 ## Step 2 — Start Minikube
 
-```bash
-# Start with enough resources for 8 services
-minikube start \
-  --driver=docker \
-  --cpus=4 \
-  --memory=8192 \
-  --disk-size=30g
+```powershell
+# Start Minikube with enough resources
+# Adjust --memory based on your machine:
+#   8GB RAM machine  → use 5120 (5GB)
+#   16GB RAM machine → use 8192 (8GB)
+
+
+minikube start `
+  --driver=docker `
+  --cpus=4 `
+  --memory=6144 `
+  --disk-size=20g `
+  --addons=ingress
 
 # Verify it's running
 minikube status
 kubectl get nodes
 ```
 
+Expected output:
+```
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   1m    v1.30.x
+```
+
 **Enable the ingress addon:**
-```bash
+```powershell
 minikube addons enable ingress
 
-# Wait for ingress controller to be ready (~60 seconds)
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=120s
+# Wait for ingress controller (~180 seconds)
+kubectl wait --namespace ingress-nginx `
+  --for=condition=ready pod `
+  --selector=app.kubernetes.io/component=controller `
+  --timeout=180s
 ```
 
 ---
 
-## Step 3 — Point Docker to Minikube's Registry
+## Step 3 — Point PowerShell to Minikube's Docker
 
-This makes images built with Docker available inside Minikube without pushing
-to an external registry.
+This lets Docker Desktop build images directly into Minikube's registry,
+so you don't need to push to Docker Hub.
 
-```bash
-# Configure your shell to use minikube's Docker daemon
-eval $(minikube docker-env)
+```powershell
+# Run this — it sets 3 environment variables in your current PowerShell session
+# Point your shell's docker commands at minikube's daemon
+minikube -p minikube docker-env --shell powershell | Invoke-Expression
 
-# Verify (should show minikube containers)
+# Verify (you should see minikube internal containers)
 docker ps
 ```
 
-> ⚠️ Run this in **every new terminal** you open, or add it to `~/.bashrc`.
+> ⚠️ You must run this in **every new PowerShell window** you open.
+> To make it permanent, add it to your PowerShell profile.
 
 ---
 
 ## Step 4 — Build All Docker Images
 
-Run all commands from the **repository root**.
+Run all commands from the **repository root** (`watupa-lk\`).
 
-### Backend services
+### Backend services (6 services)
+# Now build — the image lands inside minikube directly
 
-```bash
+```powershell
 # Identity Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.identity-service \
-  -t watupa/identity-service:latest \
-  backend/identity-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.identity-service `
+  -t watupa/identity-service:latest `
+  backend\
 
 # Salary Submission Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.salary-submission-service \
-  -t watupa/salary-submission-service:latest \
-  backend/salary-submission-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.salary-submission-service `
+  -t watupa/salary-submission-service:latest `
+  backend\
 
 # Search Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.search-service \
-  -t watupa/search-service:latest \
-  backend/search-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.search-service `
+  -t watupa/search-service:latest `
+  backend\
 
 # Stats Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.stats-service \
-  -t watupa/stats-service:latest \
-  backend/stats-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.stats-service `
+  -t watupa/stats-service:latest `
+  backend\
 
 # Vote Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.vote-service \
-  -t watupa/vote-service:latest \
-  backend/vote-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.vote-service `
+  -t watupa/vote-service:latest `
+  backend\
 
 # BFF Service
-docker build \
-  -f k8s/dockerfiles/Dockerfile.bff-service \
-  -t watupa/bff-service:latest \
-  backend/bff-service/
+docker build `
+  --platform linux/amd64 `
+  -f k8s\dockerfiles\Dockerfile.bff-service `
+  -t watupa/bff-service:latest `
+  backend\
 ```
 
 ### Frontend
 
-```bash
-docker build \
-  -f k8s/dockerfiles/Dockerfile.frontend \
-  -t watupa/frontend:latest \
-  frontend/
+```powershell
+docker build `
+  -f k8s\dockerfiles\Dockerfile.frontend `
+  -t watupa/frontend:latest `
+  frontend\
 ```
 
-### Verify all images are built
-```bash
-docker images | grep watupa
+### Verify all 7 images are built
+```powershell
+# Verify minikube can see it
+minikube image ls | Select-String "watupa"
 ```
 
-Expected output:
+Expected:
 ```
 watupa/frontend                  latest   ...
 watupa/bff-service               latest   ...
@@ -234,112 +223,115 @@ watupa/identity-service          latest   ...
 
 ## Step 5 — Apply Kubernetes Manifests
 
-Apply in this exact order (dependencies first):
+```powershell
+# 1. Namespaces first
+kubectl apply -f k8s\namespaces\namespaces.yaml
 
-```bash
-# 1. Namespaces
-kubectl apply -f k8s/namespaces/namespaces.yaml
+# 2. Secrets (DB credentials, JWT)
+kubectl apply -f k8s\secrets\postgres-secret.yaml
+kubectl apply -f k8s\secrets\app-secrets.yaml
 
-# 2. Secrets
-kubectl apply -f k8s/secrets/postgres-secret.yaml
-kubectl apply -f k8s/secrets/app-secrets.yaml
+# 3. ConfigMaps (service URLs, CORS)
+kubectl apply -f k8s\configmaps\app-config.yaml
 
-# 3. ConfigMaps
-kubectl apply -f k8s/configmaps/app-config.yaml
-
-# 4. PostgreSQL (data namespace)
-kubectl apply -f k8s/postgres/postgres.yaml
+# 4. PostgreSQL in data namespace
+kubectl apply -f k8s\postgres\postgres.yaml
 
 # 5. Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL..."
-kubectl wait --namespace data \
-  --for=condition=ready pod \
-  --selector=app=postgres \
+Write-Host "Waiting for PostgreSQL to be ready..."
+kubectl wait --namespace data `
+  --for=condition=ready pod `
+  --selector=app=postgres `
   --timeout=120s
 
-# 6. Verify DB schema was initialised
-kubectl exec -n data deploy/postgres -- \
+# 6. Verify DB schemas were initialised
+kubectl exec -n data deploy/postgres -- `
   psql -U watupa -d techsalary -c "\dn"
 
-# 7. All microservices + frontend
-kubectl apply -f k8s/deployments/app-deployments.yaml
+# 7. Deploy all microservices + frontend
+kubectl apply -f k8s\deployments\app-deployments.yaml
 
-# 8. Ingress rules
-kubectl apply -f k8s/ingress/ingress.yaml
+# 8. Apply ingress rules
+kubectl apply -f k8s\ingress\ingress.yaml
 ```
 
 ---
 
-## Step 6 — Verify All Pods Are Running
+## Step 6 — Verify Everything is Running
 
-```bash
-# Check all namespaces
+```powershell
+# Check all pods
 kubectl get pods -n data
 kubectl get pods -n app
-kubectl get ingress -n app
 
-# Watch pods starting up (Ctrl+C to stop)
-kubectl get pods -n app --watch
+# Check services
+kubectl get services -n app
+kubectl get services -n data
+
+# Check ingress
+kubectl get ingress -n app
 ```
 
-All pods should show `Running` and `1/1` READY. This may take 2–3 minutes.
+Wait until all pods show `1/1 Running`. This takes 2–4 minutes for the
+Spring Boot services to fully start.
 
-If a pod is not starting:
-```bash
-kubectl describe pod <pod-name> -n app
-kubectl logs <pod-name> -n app
+Watch live:
+```powershell
+kubectl get pods -n app --watch
+# Press Ctrl+C when all are Running
 ```
 
 ---
 
 ## Step 7 — Access the Application
 
-### Get the Minikube IP
-```bash
-minikube ip
-# Example output: 192.168.49.2
-```
+### Option A — Minikube Tunnel (Recommended for Windows)
 
-### Option A — Access via Minikube IP (within the VM)
-```bash
-MINIKUBE_IP=$(minikube ip)
-curl http://$MINIKUBE_IP/
-```
-
-### Option B — Port-forward for browser access from your laptop
-
-On the **Azure VM**, run:
-```bash
-# Forward minikube's ingress NodePort to VM port 80
-sudo kubectl port-forward \
-  --namespace ingress-nginx \
-  service/ingress-nginx-controller 80:80 \
-  --address 0.0.0.0 &
-```
-
-Then open in your browser:
-```
-http://<AZURE_VM_PUBLIC_IP>/
-```
-
-### Option C — Minikube tunnel (alternative)
-```bash
-# Run in a separate terminal — keeps running
+Open a **new PowerShell window** (keep it open) and run:
+```powershell
 minikube tunnel
-# App available at: http://127.0.0.1/
+# Enter admin password if prompted
+# Keep this window open — it must stay running
+```
+
+Then open your browser:
+```
+http://localhost/
+```
+
+### Option B — Minikube Service URL
+```powershell
+minikube service frontend-service -n app --url
+# Opens the frontend in your browser automatically
+```
+
+### Option C — Port forward manually
+```powershell
+# Forward frontend to localhost:3000
+kubectl port-forward -n app service/frontend-service 3000:3000
+
+# Open: http://localhost:3000
+```
+
+For the BFF in a separate terminal:
+```powershell
+kubectl port-forward -n app service/bff-service 8000:8000
 ```
 
 ---
 
-## Step 8 — Test the Full Workflow
+## Step 8 — Test the Full Workflow (End-to-End)
 
-### 1. Submit a salary (no login required)
-```bash
-MINIKUBE_IP=$(minikube ip)
+Open PowerShell and run these commands to prove the full workflow.
 
-curl -X POST http://$MINIKUBE_IP/bff/api/submissions \
-  -H "Content-Type: application/json" \
-  -d '{
+### 1. Submit a salary (anonymous, no login needed)
+```powershell
+$MINIKUBE_IP = minikube ip
+
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/submissions" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{
     "companyName": "WSO2",
     "jobTitle": "Software Engineer",
     "experienceLevel": "MID",
@@ -349,208 +341,237 @@ curl -X POST http://$MINIKUBE_IP/bff/api/submissions \
     "baseSalary": 150000,
     "totalCompensation": 180000,
     "anonymize": false
-  }'
+  }' | ConvertTo-Json
 ```
-Expected: `{"status":"PENDING", "id": 1, ...}`
 
-### 2. Verify it's stored as PENDING
-```bash
-kubectl exec -n data deploy/postgres -- \
-  psql -U watupa -d techsalary \
+Expected: `status: "PENDING"`
+
+### 2. Verify it's PENDING in the database
+```powershell
+kubectl exec -n data deploy/postgres -- `
+  psql -U watupa -d techsalary `
   -c "SELECT id, job_title, status FROM salary.submission;"
 ```
 
 ### 3. Sign up a user
-```bash
-curl -X POST http://$MINIKUBE_IP/bff/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "testuser",
-    "email": "test@example.com",
-    "password": "pass123"
-  }'
+```powershell
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/auth/signup" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{"username":"testuser","email":"test@example.com","password":"pass123"}'
 ```
 
-### 4. Login and get JWT token
-```bash
-TOKEN=$(curl -s -X POST http://$MINIKUBE_IP/bff/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"pass123"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+### 4. Login and capture the JWT token
+```powershell
+$loginResponse = Invoke-RestMethod `
+  -Uri "http://$MINIKUBE_IP/bff/api/auth/login" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{"username":"testuser","password":"pass123"}'
 
-echo "Token: $TOKEN"
+$TOKEN = $loginResponse.data.token
+Write-Host "Token: $TOKEN"
 ```
 
-### 5. Vote on the submission (threshold = 2 votes)
-```bash
-# Vote 1
-curl -X POST http://$MINIKUBE_IP/bff/api/votes \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"submissionId": 1, "voteType": "UPVOTE"}'
+### 5. Vote (need 2 votes to reach APPROVED threshold)
+```powershell
+# Vote from user 1
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/votes" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer $TOKEN" } `
+  -Body '{"submissionId": 1, "voteType": "UPVOTE"}'
 
-# Sign up a second user and vote again to reach threshold
-curl -X POST http://$MINIKUBE_IP/bff/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{"username":"user2","email":"user2@example.com","password":"pass456"}'
+# Create a second user
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/auth/signup" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{"username":"user2","email":"user2@example.com","password":"pass456"}'
 
-TOKEN2=$(curl -s -X POST http://$MINIKUBE_IP/bff/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"user2","password":"pass456"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
+$login2 = Invoke-RestMethod `
+  -Uri "http://$MINIKUBE_IP/bff/api/auth/login" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body '{"username":"user2","password":"pass456"}'
 
-curl -X POST http://$MINIKUBE_IP/bff/api/votes \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN2" \
-  -d '{"submissionId": 1, "voteType": "UPVOTE"}'
+$TOKEN2 = $login2.data.token
+
+# Vote from user 2 — this reaches the threshold (2 votes)
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/votes" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Headers @{ Authorization = "Bearer $TOKEN2" } `
+  -Body '{"submissionId": 1, "voteType": "UPVOTE"}'
 ```
 
 ### 6. Verify submission is now APPROVED
-```bash
-kubectl exec -n data deploy/postgres -- \
-  psql -U watupa -d techsalary \
+```powershell
+kubectl exec -n data deploy/postgres -- `
+  psql -U watupa -d techsalary `
   -c "SELECT id, job_title, status FROM salary.submission WHERE id = 1;"
 ```
-Expected: `status = APPROVED`
+Expected: `APPROVED`
 
 ### 7. Search for approved salaries
-```bash
-curl "http://$MINIKUBE_IP/bff/api/search?country=Sri+Lanka"
+```powershell
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/search?country=Sri+Lanka" |
+  ConvertTo-Json -Depth 5
 ```
 
-### 8. Check stats
-```bash
-curl "http://$MINIKUBE_IP/bff/api/stats"
+### 8. Get statistics
+```powershell
+Invoke-RestMethod -Uri "http://$MINIKUBE_IP/bff/api/stats" |
+  ConvertTo-Json -Depth 5
 ```
 
 ---
 
-## Useful Commands
+## Useful Commands (Windows PowerShell)
 
-### Check pod status
-```bash
-kubectl get pods -n app -o wide
-kubectl get pods -n data -o wide
+### Pod status
+```powershell
+kubectl get pods -n app
+kubectl get pods -n data
+kubectl get pods --all-namespaces
 ```
 
 ### View logs
-```bash
-kubectl logs -n app deploy/identity-service --follow
-kubectl logs -n app deploy/bff-service --follow
-kubectl logs -n data deploy/postgres --follow
+```powershell
+kubectl logs -n app deploy/identity-service -f
+kubectl logs -n app deploy/bff-service -f
+kubectl logs -n data deploy/postgres -f
 ```
 
 ### Describe a pod (for debugging)
-```bash
+```powershell
 kubectl describe pod -n app -l app=identity-service
 ```
 
-### Check services and ingress
-```bash
-kubectl get services -n app
-kubectl get services -n data
-kubectl get ingress -n app
-```
-
 ### Restart a deployment
-```bash
+```powershell
 kubectl rollout restart deployment/identity-service -n app
 ```
 
-### Check DB schemas
-```bash
-kubectl exec -n data deploy/postgres -- \
-  psql -U watupa -d techsalary -c "\dn"
-
-kubectl exec -n data deploy/postgres -- \
+### Check DB content
+```powershell
+# List all tables
+kubectl exec -n data deploy/postgres -- `
   psql -U watupa -d techsalary -c "\dt identity.*"
 
-kubectl exec -n data deploy/postgres -- \
+kubectl exec -n data deploy/postgres -- `
   psql -U watupa -d techsalary -c "\dt salary.*"
 
-kubectl exec -n data deploy/postgres -- \
+kubectl exec -n data deploy/postgres -- `
   psql -U watupa -d techsalary -c "\dt community.*"
+
+# Count records
+kubectl exec -n data deploy/postgres -- `
+  psql -U watupa -d techsalary `
+  -c "SELECT COUNT(*) FROM salary.submission WHERE status='APPROVED';"
 ```
 
-### Delete everything and start over
-```bash
-kubectl delete -f k8s/deployments/app-deployments.yaml
-kubectl delete -f k8s/ingress/ingress.yaml
-kubectl delete -f k8s/postgres/postgres.yaml
-kubectl delete -f k8s/configmaps/
-kubectl delete -f k8s/secrets/
-kubectl delete -f k8s/namespaces/namespaces.yaml
+### Stop Minikube (keeps all data)
+```powershell
+minikube stop
 ```
 
-### Stop/Delete minikube
-```bash
-minikube stop       # pause, keeps data
-minikube delete     # full wipe
+### Delete everything and start fresh
+```powershell
+kubectl delete -f k8s\deployments\app-deployments.yaml
+kubectl delete -f k8s\ingress\ingress.yaml
+kubectl delete -f k8s\postgres\postgres.yaml
+kubectl delete -f k8s\configmaps\
+kubectl delete -f k8s\secrets\
+kubectl delete namespace app
+kubectl delete namespace data
 ```
 
 ---
 
 ## Troubleshooting
 
+### "minikube start" fails — not enough memory
+```
+Error: ... insufficient memory
+```
+Lower the memory: `minikube start --memory=4096 --cpus=2`
+
 ### Pod stuck in `Pending`
-```bash
+```powershell
 kubectl describe pod <pod-name> -n app
-# Look for "Events:" section — usually insufficient CPU/memory
-# Fix: minikube start --cpus=4 --memory=8192
+# Check "Events:" — usually: "Insufficient memory"
 ```
+Solution: `minikube stop` then `minikube start --memory=8192`
 
-### Pod in `CrashLoopBackOff`
-```bash
+### `CrashLoopBackOff` on a service
+```powershell
 kubectl logs <pod-name> -n app --previous
-# Usually a DB connection issue — check app-secrets
+```
+Usually a DB connection issue. Check that `app-secrets` has correct values
+and that PostgreSQL is running: `kubectl get pods -n data`
+
+### `ErrImageNeverPull` — image not found
+```powershell
+# You must point Docker to minikube BEFORE building
+& minikube -p minikube docker-env --shell powershell | Invoke-Expression
+# Then rebuild the image
+docker build -f k8s\dockerfiles\Dockerfile.identity-service `
+  -t watupa/identity-service:latest backend\identity-service\
 ```
 
-### Cannot connect to PostgreSQL
-```bash
-# Test from inside the cluster
-kubectl run pg-test --image=postgres:16-alpine -n app --rm -it --restart=Never -- \
-  psql -h postgres-service.data.svc.cluster.local -U watupa -d techsalary -c "\dn"
-```
-
-### Ingress not working
-```bash
+### Ingress not routing
+```powershell
 kubectl get pods -n ingress-nginx
-# Make sure ingress addon is enabled: minikube addons enable ingress
+# If not running: minikube addons enable ingress
 ```
 
-### Image not found (`ErrImagePull`)
-```bash
-# Make sure you ran: eval $(minikube docker-env)
-# Then rebuild: docker build -t watupa/<service>:latest ...
-# Check: docker images | grep watupa
+### Port already in use (tunnel error)
+```powershell
+# Kill whatever is on port 80
+netstat -ano | findstr :80
+taskkill /PID <PID> /F
 ```
 
 ---
 
-## Repository Structure
+## System Requirements Summary
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| RAM | 8 GB | 16 GB |
+| CPU | 4 cores | 6+ cores |
+| Disk free | 15 GB | 30 GB |
+| OS | Windows 10 64-bit | Windows 11 |
+| Docker Desktop | 4.x+ | Latest |
+| Minikube RAM allocation | 5 GB | 6–8 GB |
+| Minikube CPU allocation | 2 | 4 |
+
+---
+
+## File Structure
+
 ```
-watupa-lk/
-├── backend/
-│   ├── identity-service/
-│   ├── salary-submission-service/
-│   ├── search-service/
-│   ├── stats-service/
-│   ├── vote-service/
-│   └── bff-service/
-├── frontend/
-├── database/
-│   └── postgres/
-│       └── init/001_init.sql
-└── k8s/
-    ├── namespaces/namespaces.yaml
-    ├── secrets/
+watupa-lk\
+├── backend\
+│   ├── identity-service\
+│   ├── salary-submission-service\
+│   ├── search-service\
+│   ├── stats-service\
+│   ├── vote-service\
+│   └── bff-service\
+├── frontend\
+├── database\
+│   └── postgres\init\001_init.sql
+└── k8s\
+    ├── namespaces\namespaces.yaml
+    ├── secrets\
     │   ├── postgres-secret.yaml
     │   └── app-secrets.yaml
-    ├── configmaps/app-config.yaml
-    ├── postgres/postgres.yaml          ← PVC + Deployment + Service
-    ├── deployments/app-deployments.yaml ← all 7 services
-    ├── ingress/ingress.yaml
-    └── dockerfiles/
+    ├── configmaps\app-config.yaml
+    ├── postgres\postgres.yaml
+    ├── deployments\app-deployments.yaml
+    ├── ingress\ingress.yaml
+    └── dockerfiles\
         ├── Dockerfile.identity-service
         ├── Dockerfile.salary-submission-service
         ├── Dockerfile.search-service

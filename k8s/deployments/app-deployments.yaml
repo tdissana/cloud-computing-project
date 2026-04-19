@@ -32,14 +32,15 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8001
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8001
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -97,14 +98,15 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8002
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8002
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -164,14 +166,15 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8003
-            initialDelaySeconds: 20
+            initialDelaySeconds: 45
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8003
-            initialDelaySeconds: 40
+            initialDelaySeconds: 75
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -229,14 +232,15 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8004
-            initialDelaySeconds: 20
+            initialDelaySeconds: 45
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health
               port: 8004
-            initialDelaySeconds: 40
+            initialDelaySeconds: 75
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -297,14 +301,15 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8005
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8005
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -362,14 +367,15 @@ spec:
             httpGet:
               path: /actuator/health/readiness
               port: 8000
-            initialDelaySeconds: 20
+            initialDelaySeconds: 40
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8000
-            initialDelaySeconds: 40
+            initialDelaySeconds: 60
             periodSeconds: 20
             failureThreshold: 3
           resources:
@@ -431,7 +437,8 @@ spec:
               port: 3000
             initialDelaySeconds: 20
             periodSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 6
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /
