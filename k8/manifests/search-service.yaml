@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search-service
+  namespace: watupa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search-service
+  template:
+    metadata:
+      labels:
+        app: search-service
+    spec:
+      containers:
+      - name: search-service
+        image: watupa/search-service:latest
+        ports:
+        - containerPort: 8003
+        envFrom:
+        - configMapRef:
+            name: watupa-config
+        - secretRef:
+            name: watupa-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search-service
+  namespace: watupa
+spec:
+  selector:
+    app: search-service
+  ports:
+  - port: 8003
+    targetPort: 8003

@@ -1,0 +1,14 @@
+# Multi-stage build for vote-service
+FROM maven:3.9.6-openjdk-21-slim AS build
+WORKDIR /app
+COPY backend/pom.xml .
+COPY backend/vote-service/pom.xml vote-service/
+RUN mvn dependency:go-offline -B
+COPY backend/vote-service/src vote-service/src
+RUN mvn clean package -DskipTests -pl vote-service
+
+FROM openjdk:21-jre-slim
+WORKDIR /app
+COPY --from=build /app/vote-service/target/vote-service-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8005
+ENTRYPOINT ["java", "-jar", "app.jar"]
