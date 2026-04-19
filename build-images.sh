@@ -18,7 +18,7 @@ echo "▶ Building identity-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.identity-service" \
   -t watupa/identity-service:latest \
-  "$PROJECT_ROOT/backend/identity-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 2. Salary Submission Service ──────────────────────────────────────
 echo ""
@@ -26,7 +26,7 @@ echo "▶ Building salary-submission-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.salary-submission-service" \
   -t watupa/salary-submission-service:latest \
-  "$PROJECT_ROOT/backend/salary-submission-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 3. Vote Service ───────────────────────────────────────────────────
 echo ""
@@ -34,7 +34,7 @@ echo "▶ Building vote-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.vote-service" \
   -t watupa/vote-service:latest \
-  "$PROJECT_ROOT/backend/vote-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 4. Search Service ─────────────────────────────────────────────────
 echo ""
@@ -42,7 +42,7 @@ echo "▶ Building search-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.search-service" \
   -t watupa/search-service:latest \
-  "$PROJECT_ROOT/backend/search-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 5. Stats Service ──────────────────────────────────────────────────
 echo ""
@@ -50,7 +50,7 @@ echo "▶ Building stats-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.stats-service" \
   -t watupa/stats-service:latest \
-  "$PROJECT_ROOT/backend/stats-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 6. BFF Service ────────────────────────────────────────────────────
 echo ""
@@ -58,7 +58,7 @@ echo "▶ Building bff-service..."
 docker build \
   -f "$DOCKERFILE_DIR/Dockerfile.bff-service" \
   -t watupa/bff-service:latest \
-  "$PROJECT_ROOT/backend/bff-service"
+  "$PROJECT_ROOT/backend"
 
 # ── 7. Frontend ───────────────────────────────────────────────────────
 echo ""

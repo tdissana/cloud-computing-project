@@ -2,11 +2,16 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /build
 
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
+# Copy parent pom (required by child module's <parent> reference)
+COPY pom.xml ./
+
+WORKDIR /build/stats-service
+COPY stats-service/.mvn/ .mvn/
+COPY stats-service/mvnw stats-service/pom.xml ./
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
 
-COPY src/ src/
+# Copy source and build (skip tests — tests run in CI)
+COPY stats-service/src/ src/
 RUN ./mvnw package -DskipTests -q
 
 # ── Stage 2: Runtime ──────────────────────────────────────────────────
@@ -16,7 +21,7 @@ WORKDIR /app
 RUN addgroup -S watupa && adduser -S watupa -G watupa
 USER watupa
 
-COPY --from=builder /build/target/*.jar app.jar
+COPY --from=builder /build/stats-service/target/*.jar app.jar
 
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=60.0 -XX:+UseContainerSupport -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=128m"
 
