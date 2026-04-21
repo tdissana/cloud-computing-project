@@ -16,6 +16,7 @@ spec:
       containers:
       - name: salary-submission-service
         image: watupa/salary-submission-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8002
         envFrom:

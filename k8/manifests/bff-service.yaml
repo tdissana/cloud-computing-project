@@ -16,6 +16,7 @@ spec:
       containers:
       - name: bff-service
         image: watupa/bff-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         envFrom:

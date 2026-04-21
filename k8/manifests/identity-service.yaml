@@ -16,6 +16,7 @@ spec:
       containers:
       - name: identity-service
         image: watupa/identity-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8001
         envFrom:

@@ -16,6 +16,7 @@ spec:
       containers:
       - name: search-service
         image: watupa/search-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8003
         envFrom:

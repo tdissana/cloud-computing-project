@@ -16,6 +16,7 @@ spec:
       containers:
       - name: stats-service
         image: watupa/stats-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8004
         envFrom:

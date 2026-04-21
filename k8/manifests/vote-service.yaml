@@ -16,6 +16,7 @@ spec:
       containers:
       - name: vote-service
         image: watupa/vote-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8005
         envFrom:
