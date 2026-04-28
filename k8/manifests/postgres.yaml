@@ -1,8 +1,20 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: watupa-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: watupa
+  namespace: watupa-data
 spec:
   replicas: 1
   selector:
@@ -22,17 +34,17 @@ spec:
         - name: POSTGRES_DB
           valueFrom:
             configMapKeyRef:
-              name: watupa-config
+              name: watupa-data-config
               key: DB_NAME
         - name: POSTGRES_USER
           valueFrom:
             configMapKeyRef:
-              name: watupa-config
+              name: watupa-data-config
               key: DB_USERNAME
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: watupa-secret
+              name: watupa-data-secret
               key: DB_PASSWORD
         volumeMounts:
         - name: postgres-data
@@ -40,17 +52,18 @@ spec:
         - name: init-scripts
           mountPath: /docker-entrypoint-initdb.d
       volumes:
-      - name: postgres-data
-        emptyDir: {}
-      - name: init-scripts
-        configMap:
-          name: postgres-init
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: init-scripts
+          configMap:
+            name: postgres-init
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: watupa
+  namespace: watupa-data
 spec:
   selector:
     app: postgres
@@ -58,11 +71,12 @@ spec:
   - port: 5432
     targetPort: 5432
 ---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-init
-  namespace: watupa
+  namespace: watupa-data
 data:
   001_init.sql: |
     -- identity schema

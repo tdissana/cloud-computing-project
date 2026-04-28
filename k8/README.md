@@ -88,9 +88,10 @@ Access at: http://watupa.local
 
 ### 6. Verify Deployment
 ```bash
-kubectl get pods -n watupa
-kubectl get services -n watupa
-kubectl logs -n watupa deployment/frontend
+kubectl get pods -n watupa-app
+kubectl get pods -n watupa-data
+kubectl get services -n watupa-app
+kubectl logs -n watupa-app deployment/frontend
 ```
 
 ## Troubleshooting
@@ -99,18 +100,18 @@ kubectl logs -n watupa deployment/frontend
 
 1. **Pods not starting**
    - Check image builds: `docker images | grep watupa`
-   - Check pod status: `kubectl describe pod <pod-name> -n watupa`
+   - Check pod status: `kubectl describe pod <pod-name> -n watupa-app`
 
 2. **Database connection errors**
-   - Ensure Postgres pod is running: `kubectl logs -n watupa deployment/postgres`
+   - Ensure Postgres pod is running: `kubectl logs -n watupa-data deployment/postgres`
    - Check DB credentials in secret
 
 3. **Service communication issues**
-   - Verify services: `kubectl get svc -n watupa`
-   - Check env vars in pods: `kubectl exec -n watupa <pod> -- env`
+   - Verify services: `kubectl get svc -n watupa-app`
+   - Check env vars in pods: `kubectl exec -n watupa-app <pod> -- env`
 
 4. **Frontend not loading**
-   - Check BFF service: `kubectl logs -n watupa deployment/bff-service`
+   - Check BFF service: `kubectl logs -n watupa-app deployment/bff-service`
    - Verify API_URL in frontend pod
 
 5. **Port conflicts**
@@ -119,19 +120,24 @@ kubectl logs -n watupa deployment/frontend
 ### Logs and Debugging
 ```bash
 # All pods
-kubectl logs -n watupa --all-containers
+kubectl logs -n watupa-app --all-containers
+kubectl logs -n watupa-data --all-containers
 
 # Specific service
-kubectl logs -n watupa deployment/<service-name>
+kubectl logs -n watupa-app deployment/<service-name>
 
 # Describe pod
-kubectl describe pod <pod-name> -n watupa
+kubectl describe pod <pod-name> -n watupa-app
 ```
 
 ### Cleanup
 ```bash
-kubectl delete namespace watupa
-k3d cluster delete watupa-cluster  # if using k3d
+# Delete namespaces
+kubectl delete namespace watupa-app
+kubectl delete namespace watupa-data
+
+# Delete clusters (if using k3d)
+k3d cluster delete watupa-cluster
 ```
 
 ## Development Notes
