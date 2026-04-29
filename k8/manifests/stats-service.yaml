@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats-service
+  namespace: watupa-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stats-service
+  template:
+    metadata:
+      labels:
+        app: stats-service
+    spec:
+      containers:
+      - name: stats-service
+        image: watupa/stats-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8004
+        envFrom:
+        - configMapRef:
+            name: watupa-config
+        - secretRef:
+            name: watupa-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stats-service
+  namespace: watupa-app
+spec:
+  selector:
+    app: stats-service
+  ports:
+  - port: 8004
+    targetPort: 8004

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salary-submission-service
+  namespace: watupa-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: salary-submission-service
+  template:
+    metadata:
+      labels:
+        app: salary-submission-service
+    spec:
+      containers:
+      - name: salary-submission-service
+        image: watupa/salary-submission-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8002
+        envFrom:
+        - configMapRef:
+            name: watupa-config
+        - secretRef:
+            name: watupa-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salary-submission-service
+  namespace: watupa-app
+spec:
+  selector:
+    app: salary-submission-service
+  ports:
+  - port: 8002
+    targetPort: 8002

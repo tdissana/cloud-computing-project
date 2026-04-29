@@ -1,0 +1,19 @@
+# Multi-stage build for identity-service
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY backend/pom.xml .
+COPY backend/bff-service/pom.xml bff-service/
+COPY backend/identity-service/pom.xml identity-service/
+COPY backend/salary-submission-service/pom.xml salary-submission-service/
+COPY backend/search-service/pom.xml search-service/
+COPY backend/stats-service/pom.xml stats-service/
+COPY backend/vote-service/pom.xml vote-service/
+RUN mvn dependency:go-offline -B
+COPY backend/identity-service/src identity-service/src
+RUN mvn clean package -DskipTests -pl identity-service
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/identity-service/target/identity-service-0.0.1-SNAPSHOT.jar app.jar
+EXPOSE 8001
+ENTRYPOINT ["java", "-jar", "app.jar"]
