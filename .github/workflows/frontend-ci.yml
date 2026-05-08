@@ -1,42 +1,47 @@
-name: Frontend CI
+name: Frontend CI                # Workflow name shown in GitHub Actions
 
-on:
-  push:
-    branches: [ "main", "development" ]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
-  pull_request:
-    branches: [ "main", "development" ]
-  workflow_dispatch:
+on:                              # Defines when the workflow runs
+  push:                          # Run when code is pushed
+    branches: [ "main", "development" ]   # Only for these branches
+    paths:                       # Only run if these paths change
+      - "frontend/**"            # Any file inside frontend folder
+      - ".github/workflows/frontend-ci.yml" # Workflow file itself
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  pull_request:                  # Run for pull requests
+    branches: [ "main", "development" ]   # PR target branches
 
-    defaults:
+  workflow_dispatch:             # Allow manual execution from GitHub UI
+
+jobs:                            # Contains all workflow jobs
+  build:                         # Job name
+
+    runs-on: ubuntu-latest       # Use Ubuntu virtual machine
+
+    defaults:                    # Default settings
       run:
-        working-directory: frontend
+        working-directory: frontend   # Run commands inside frontend folder
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    steps:                       # Steps executed in order
 
-      - name: Setup Node.js
+      - name: Checkout code      # Step name
+        uses: actions/checkout@v4   # Download repository code
+
+      - name: Setup Node.js      # Install Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+        with:                    # Configuration values
+          node-version: 20       # Install Node.js version 20
+          cache: 'npm'           # Enable npm dependency caching
           cache-dependency-path: frontend/package-lock.json
+          # File used to detect dependency changes
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies # Install frontend packages
+        run: npm ci              # Clean install from package-lock.json
 
-      - name: Run TypeScript check
-        run: npx tsc --noEmit
+      - name: Run TypeScript check # Check TypeScript errors
+        run: npx tsc --noEmit    # Compile check without generating files
 
-      - name: Run ESLint
+      - name: Run ESLint         # Run code quality checks
         run: npm run lint
 
-      - name: Build Next.js app
+      - name: Build Next.js app  # Build production frontend app
         run: npm run build
